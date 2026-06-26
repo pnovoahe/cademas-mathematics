@@ -1,0 +1,585 @@
+%  LaTeX support: latex@mdpi.com 
+%  For support, please attach all files needed for compiling as well as the log file, and specify your operating system, LaTeX version, and LaTeX editor.
+
+%=================================================================
+\documentclass[mathematics,article,submit,moreauthors]{Definitions/mdpi} 
+
+%=================================================================
+% MDPI internal commands - do not modify
+\firstpage{1} 
+\makeatletter 
+\setcounter{page}{\@firstpage} 
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026} 
+%\externaleditor{Firstname Lastname} % More than 1 editor, please add `` and '' before the last editor name
+\datereceived{ } 
+\daterevised{ } % Comment out if no revised date
+\dateaccepted{ } 
+\datepublished{ } 
+%\datecorrected{} % For corrected papers: "Corrected: XXX" date in the original paper.
+%\dateretracted{} % For retracted papers: "Retracted: XXX" date in the original paper.
+%\doinum{} % Used for some special journals, like molbank
+%\pdfoutput=1 % Uncommented for upload to arXiv.org
+%\CorrStatement{yes}  % For updates
+%\longauthorlist{yes} % For many authors that exceed the left citation part
+%\IsAssociation{yes} % For association journals
+
+%=================================================================
+% Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx, epstopdf, lastpage, ifthen, float, amsmath, amssymb, lineno, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, colortbl, soul, multirow, microtype, tikz, totcount, changepage, attrib, upgreek, array, tabularx, pbox, ragged2e, tocloft, marginnote, marginfix, enotez, amsthm, natbib, hyperref, cleveref, scrextend, url, geometry, newfloat, caption, draftwatermark, seqsplit
+% cleveref: load \crefname definitions after \begin{document}
+
+%=================================================================
+% Please use the following mathematics environments: Theorem, Lemma, Corollary, Proposition, Characterization, Property, Problem, Example, ExamplesandDefinitions, Hypothesis, Remark, Definition, Notation, Assumption
+%% For proofs, please use the proof environment (the amsthm package is loaded by the MDPI class).
+
+%=================================================================
+% Full title of the paper (Capitalized)
+\Title{Beyond Linear Trade-offs in Context-Aware Decision Support: Non-Linear Aggregation and Rank Stability Analysis}
+
+% Author Orchid ID: enter ID or remove command
+\newcommand{\orcidauthorA}{0000-0003-3267-6753} % Add \orcidA{} behind the author's name
+\newcommand{\orcidauthorB}{0009-0002-0183-7905} % Add \orcidB{} behind the author's name
+\newcommand{\orcidauthorC}{0000-0002-7653-1452} % Add \orcidB{} behind the author's name
+
+% Authors, for the paper (add full first names)
+\Author{Pavel Novoa-Hernández$^{1,*}$\orcidA{}, Mariia Godz$^{2}$\orcidA{} and David A. Pelta$^{2}$\orcidC{}}
+
+%\longauthorlist{yes}
+
+% MDPI internal command: Authors, for metadata in PDF
+\AuthorNames{Pavel Novoa-Hernández, Mariia Godz and David A. Pelta}
+
+%\longauthorlist{yes}
+
+% Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
+\address{%
+$^{1}$ \quad Dept. Computer Engineering and Systems, Universidad de La Laguna; pnovoahe@ull.edu.es\\
+$^{2}$ \quad Dept. Computer Science and Artificial Intelligence, Universidad de Granada; \{mariiagodz,dpelta\}@ugr.es}
+
+% Contact information of the corresponding author
+\corres{Correspondence:pnovoahe@ull.edu.es}
+
+% Current address and/or shared authorship
+%\firstnote{Current address: Affiliation.}  
+% Current address should not be the same as any items in the Affiliation section.
+
+%\secondnote{These authors contributed equally to this work.}
+% The commands \thirdnote{} till \eighthnote{} are available for further notes.
+
+%\simplesumm{} % Simple summary
+
+%\conference{} % An extended version of a conference paper
+
+% Abstract (Do not insert blank lines, i.e. \\) 
+\abstract{A single paragraph of about 200 words maximum. For research articles, abstracts should give a pertinent overview of the work. We strongly encourage authors to use the following style of structured abstracts, but without headings: (1) Background: Place the question addressed in a broad context and highlight the purpose of the study. (2) Methods: Briefly describe the main methods or treatments applied. (3) Results: Summarize the article’s main findings. (4) Conclusions: Indicate the main conclusions or interpretations. The abstract should be an objective representation of the article and it must not contain results that are not presented and substantiated in the main text and should not exaggerate the main~conclusions.}
+
+% Keywords
+\keyword{keyword 1; keyword 2; keyword 3 (List three to ten pertinent keywords specific to the article; yet reasonably common within the subject discipline.)} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+
+\section{Introduction}
+
+Automated Decision-Making (ADM) systems have become increasingly influential in domains where decisions carry significant economic, social, or ethical consequences, including healthcare, finance, human resources, and public administration. In these environments, advances in machine learning have substantially improved predictive capabilities, enabling organizations to estimate risks, anticipate events, and support decision makers with unprecedented levels of accuracy. Nevertheless, prediction alone is rarely sufficient to support operational decisions. Institutional policies, regulatory requirements, resource limitations, ethical principles, and organizational objectives frequently determine whether a recommendation should be accepted, modified, postponed, or even rejected. As a consequence, contemporary decision support systems are progressively evolving from purely predictive architectures toward hybrid frameworks that explicitly combine data-driven evidence with symbolic, rule-based, or contextual knowledge \cite{Kierner2023,Rahman2025,PerezDominguez2024}.
+
+This evolution raises an important methodological challenge. Once predictive evidence and contextual knowledge coexist within the same decision process, the quality of the final recommendation depends not only on the accuracy of the predictive model or the quality of the contextual policies, but also on the mechanism used to integrate these heterogeneous sources of information. In practice, the aggregation rule becomes the mathematical embodiment of the organization’s decision policy, determining how predictive evidence should interact with institutional constraints when both sources provide conflicting indications.
+
+The Cooperative Automated Decision-Making System (CADEMAS) framework was recently proposed to address this challenge by providing a general architecture for cooperative and context-aware automated decision making \cite{NovoaHernandez2026}. Rather than considering predictive models as isolated decision makers, CADEMAS organizes heterogeneous Automated Decision-Making (ADM) units within a layered architecture that separates predictive inference, decision integration, and contextual modulation. This separation allows predictive evidence to be complemented with contextual knowledge expressed through organizational policies, regulatory requirements, or expert-defined rules. Recent instantiations of CADEMAS have demonstrated the applicability of this architecture in practical scenarios such as employee attrition prediction, where machine learning models are combined with fuzzy representations of organizational policies to support intervention prioritization \cite{Godz2026}.
+
+Despite this architectural flexibility, existing CADEMAS instantiations share a common simplifying assumption: predictive risk and contextual information are integrated through a linear convex combination. Although this approach is attractive because of its simplicity and intuitive interpretation, it implicitly assumes full compensability between both dimensions. Consequently, a sufficiently high predictive risk may compensate for poor contextual compatibility, while highly favorable contextual conditions may offset weak predictive evidence. Such behavior is appropriate in some applications but becomes difficult to justify in environments where contextual information represents institutional vetoes, mandatory regulations, safety requirements, or fairness constraints. In these situations, allowing unrestricted compensation may produce recommendations that are mathematically consistent yet institutionally unacceptable.
+
+The broader literature on fuzzy decision making provides a rich collection of aggregation operators capable of modeling different interaction semantics between multiple criteria. Conjunctive operators based on t-norms naturally capture strict or veto-like behavior, disjunctive operators represent permissive decision regimes, while non-linear compensatory operators offer intermediate levels of compensation that cannot be expressed through linear weighted averages \cite{Yager1988,Grabisch1996,Tan2009}. Although these operators have been extensively studied within fuzzy multi-criteria decision making, they have rarely been analyzed as alternative governance mechanisms for hybrid systems that integrate machine learning predictions with contextual knowledge. Moreover, little attention has been devoted to understanding how the choice of aggregation operator affects the stability of the induced prioritization, the occurrence of rank reversals, or the robustness of the resulting decision process under contextual uncertainty.
+
+This paper addresses this gap by investigating the role of non-linear fuzzy aggregation within the CADEMAS framework. Rather than proposing a new aggregation operator, we reinterpret the aggregation stage as the mathematical mechanism through which organizational decision semantics are encoded. Under this perspective, different operators correspond to different governance regimes, ranging from fully compensatory integration to strict non-compensatory behavior. We analyze how these regimes modify the geometry of the decision space, alter prioritization rankings, and influence the robustness of decision outcomes under varying contextual conditions.
+
+The main contributions of this work are fourfold:
+
+\begin{itemize}
+\item We formulate the integration of predictive risk and fuzzy contextual knowledge within CADEMAS as a generalized aggregation problem.
+
+\item We instantiate representative families of fuzzy aggregation operators exhibiting different compensation semantics, including conjunctive, disjunctive, and non-linear compensatory behaviors.
+
+\item We analyze the effect of aggregation semantics on induced prioritization rankings, with particular emphasis on rank stability and rank reversal phenomena.
+
+\item We evaluate the sensitivity of the resulting decision process to contextual uncertainty, providing practical insights for the design of robust and transparent context-aware decision support systems.
+\end{itemize}
+
+The remainder of the paper is organized as follows. Section~\ref{sect:background} reviews the CADEMAS framework and the fuzzy aggregation operators considered in this work. Section~\ref{sect:nonlinear_integration} formalizes the proposed aggregation models. Section~\ref{sect:experimental_design} describes the simulation framework; Section~\ref{sect:results} analyzes aggregation semantics under controlled stress tests; Section~\ref{sect:real_example} applies the operators to a published employee-attrition instantiation; and Section~\ref{sect:discussion} discusses the implications for the design and governance of hybrid automated decision-making systems.
+
+
+
+\section{Background and Preliminaries}
+\label{sect:background}
+
+\subsection{The CADEMAS Framework and Its Instantiations}
+\label{subsect:cademas}
+
+CADEMAS (Cooperative Automated Decision-Making Systems) is a general framework for designing context-aware decision support systems in which heterogeneous Automated Decision-Making (ADM) components cooperate to produce a unified decision outcome \cite{NovoaHernandez2026}. Unlike conventional ensemble methods, where multiple predictive models are combined solely to improve predictive performance, CADEMAS explicitly separates predictive inference from contextual governance. Consequently, predictive evidence and institutional knowledge are treated as complementary sources of information that jointly determine the final decision.
+
+Formally, a CADEMAS instance is represented by the tuple
+\begin{equation}
+\mathcal{S}=
+\langle I, U, O, K, T \rangle,
+\end{equation}
+where $I$ denotes the Input Manager, $U$ the set of Automated Decision-Making units, $O$ the Decision Integration Layer, $K$ the Contextual Modulator, and $T$ the universe of admissible data representations. The architecture is intentionally generic and independent of any particular predictive model, inference mechanism, or contextual representation.
+
+The ADM units generate partial decision signals from the available information, while the Decision Integration Layer harmonizes these heterogeneous outputs into a unified decision object. Subsequently, the Contextual Modulator adjusts this preliminary decision according to organizational policies, regulatory requirements, expert knowledge, or other contextual factors. This layered organization enables CADEMAS to accommodate a broad spectrum of decision-making scenarios while preserving a clear separation between predictive evidence and contextual reasoning.
+
+Recent applications have instantiated this general architecture in domains where machine learning predictions must be reconciled with institutional decision policies. In the employee attrition scenario presented in \cite{Godz2026}, predictive models estimate the probability that an employee voluntarily leaves the organization, whereas fuzzy contextual rules encode organizational priorities regarding employee retention. Similarly, in the SME insolvency risk application, predictive models estimate financial distress while contextual rules incorporate business and organizational considerations into the prioritization process.
+
+Although these applications differ substantially in their domains and predictive models, they share a common decision structure. For each decision case $i$, the predictive subsystem produces a normalized risk score
+
+\begin{equation}
+R_i \in [0,1],
+\end{equation}
+while the contextual module computes a normalized degree of contextual satisfaction
+
+\begin{equation}
+Q_i \in [0,1],
+\end{equation}
+representing the extent to which the corresponding organizational policies or contextual requirements support prioritizing that particular case.
+
+Consequently, independently of the underlying application domain, the decision integration problem can be formulated as the construction of a prioritization function
+
+\begin{equation}
+P_i = A(R_i,Q_i),
+\end{equation}
+where $A$ denotes an aggregation operator combining predictive evidence and contextual information.
+
+Existing CADEMAS instantiations have adopted linear convex aggregation for this purpose. In the present work, however, we abstract the integration stage from any specific aggregation mechanism and instead investigate how different aggregation semantics affect the resulting prioritization. This abstraction transforms the aggregation operator itself into the central object of analysis, allowing the study to remain independent of the application domain while preserving the generality of the CADEMAS framework.
+
+
+\section{Non-Linear Integration of Predictive Risk and Fuzzy Context}
+\label{sect:nonlinear_integration}
+
+This section formalizes the integration of predictive risk and fuzzy contextual knowledge within CADEMAS-based decision systems. We first analyze the limitations of the standard linear integration scheme, then introduce a family of non-linear aggregation operators, and finally formalize the induced ranking structure that constitutes the main object of analysis in this work.
+
+\subsection{The Limits of Linear Convex Combination}
+\label{subsect:linear_limits}
+
+Existing CADEMAS instantiations, including applications in employee attrition and SME insolvency risk assessment, typically integrate predictive and contextual information through a linear convex combination of the form:
+\begin{equation}
+P_i = \lambda R_i + (1 - \lambda) Q_i, \quad \lambda \in [0,1],
+\end{equation}
+where $R_i \in [0,1]$ denotes the normalized predictive risk score and $Q_i \in [0,1]$ represents the degree of contextual compatibility or policy alignment.
+
+This formulation is fully compensatory. To make this property explicit, consider two alternatives $i$ and $j$ such that:
+\[
+R_i > R_j \quad \text{and} \quad Q_i < Q_j.
+\]
+Under linear aggregation, the ordering between $i$ and $j$ depends solely on the relative magnitude of the trade-off parameter $\lambda$. More importantly, a deterioration in contextual compatibility can always be compensated by an increase in predictive risk, and vice versa.
+
+This compensatory behavior can be formalized by observing that:
+\[
+\frac{\partial P_i}{\partial R_i} = \lambda, \quad \frac{\partial P_i}{\partial Q_i} = 1 - \lambda,
+\]
+which implies constant marginal rates of substitution between predictive and contextual dimensions. As a result, the iso-priority contours induced by $P_i$ are linear hyperplanes in the $(R_i, Q_i)$ space.
+
+In decision environments involving institutional constraints, safety requirements, or policy-based veto conditions, such unrestricted compensation may lead to undesirable prioritization outcomes, as it allows one dimension to systematically offset deficiencies in the other.
+
+\subsection{Non-Linear Aggregation in CADEMAS}
+\label{subsect:nonlinear_aggregators}
+
+To overcome the limitations of linear aggregation, we consider a generalized aggregation operator:
+\begin{equation}
+A: [0,1]^2 \rightarrow [0,1],
+\end{equation}
+satisfying monotonicity and boundary conditions:
+\[
+A(0,0)=0, \quad A(1,1)=1.
+\]
+
+We distinguish three representative families of aggregation semantics.
+
+\begin{enumerate}
+\item \textit{Conjunctive (non-compensatory) regime}. These operators model strict interaction between predictive and contextual dimensions, where poor performance in either dimension strongly penalizes the final score.
+\begin{equation}
+A_T^{\min}(R_i, Q_i) = \min(R_i, Q_i),
+\end{equation}
+
+\begin{equation}
+A_T^{\prod}(R_i, Q_i) = R_i \cdot Q_i.
+\end{equation}
+
+These operators encode a veto-like behavior in which low contextual compatibility cannot be fully offset by high predictive risk.
+
+\item \textit{Disjunctive (permissive) regime}
+These operators capture decision settings in which satisfying either predictive or contextual criteria may be sufficient for prioritization:
+
+\begin{equation}
+A_S(R_i, Q_i) = \max(R_i, Q_i).
+\end{equation}
+
+This regime emphasizes the most favorable signal and is appropriate in exploratory or opportunistic decision settings.
+
+\item \textit{Non-linear compensatory regime}. Intermediate behavior between full compensation and strict non-compensation can be modeled through non-linear operators such as the weighted geometric mean:
+
+\begin{equation}
+A_G(R_i, Q_i) = R_i^{\lambda} Q_i^{1-\lambda}, \quad \lambda \in [0,1].
+\end{equation}
+
+Unlike linear aggregation, this operator penalizes imbalance between predictive and contextual components while preserving a controlled form of compensation.
+
+\end{enumerate}
+
+\subsection{Rank Formulation and Structural Properties}
+\label{subsect:rank_properties}
+
+Given a set of decision alternatives $X = \{1,\dots,n\}$, each alternative $i \in X$ is assigned a score:
+\begin{equation}
+P_i = A(R_i, Q_i),
+\end{equation}
+where $A$ is a generalized aggregation operator, $R_i \in [0,1]$ is the predictive risk, and $Q_i \in [0,1]$ is the contextual satisfaction degree.
+
+We define the aggregated score vector as:
+\begin{equation}
+\mathbf{P}(A) = (P_1, \dots, P_n).
+\end{equation}
+
+The decision output of the system is then defined as a ranking function:
+\begin{equation}
+\pi_A = \operatorname{argsort}_{i \in X} \, P_i,
+\end{equation}
+such that:
+\[
+P_{\pi_A(1)} \geq P_{\pi_A(2)} \geq \cdots \geq P_{\pi_A(n)}.
+\]
+
+Thus, the aggregation operator $A$ induces a complete ordering over alternatives through the mapping:
+\[
+A \;\rightarrow\; \mathbf{P}(A) \;\rightarrow\; \pi_A.
+\]
+
+This ranking $\pi_A$ is the primary object of analysis in the subsequent sections. However, to interpret the empirical results meaningfully, we must first establish two fundamental structural properties that govern how the choice of $A$ affects the stability of $\pi_A$ relative to the initial predictive ordering. Specifically, we focus on the phenomenon of \textit{rank reversal}—the situation where the final ranking $\pi_A$ inverts the order suggested solely by the predictive risk $R$. 
+
+To formalize this, let $i, j \in X$ be two alternatives such that the predictive model identifies $i$ as strictly riskier than $j$, i.e., $R_i > R_j$. In a purely data-driven system, the predictive ranking would strictly prioritize $i$ over $j$. The following propositions characterize the conditions under which the contextual evaluation $Q$ can reverse this initial order, depending on the semantic regime of the aggregation operator.
+
+
+\begin{Proposition}[Policy-Driven Veto and Forced Rank Reversal]
+\label{prop:rank_reversal}
+The following results characterize the conditions under which the aggregation mechanism induces rank reversals under linear and non-linear regimes:
+
+\begin{enumerate}
+\item Under linear convex aggregation $A_L$ with trade-off parameter $\lambda \in (0,1)$, a rank reversal occurs ($P_j > P_i$) if and only if the contextual advantage of alternative $j$, defined as $\Delta Q = Q_j - Q_i$, satisfies:
+\begin{equation}
+\Delta Q > \frac{\lambda}{1-\lambda}(R_i - R_j)
+\end{equation}
+
+\item Under the strict conjunctive aggregator $A_T^{\min}$ (resp. disjunctive $A_S^{\max}$), if the contextual score of the disadvantaged alternative is zero ($Q_i = 0$) (resp. the advantaged alternative achieves perfect compliance, $Q_j = 1$), a rank reversal is mathematically guaranteed, provided that the evaluation of the alternative not reaching the absorbing element is strictly positive (resp. strictly less than $1$). Specifically, this requires $R_j > 0$ and $Q_j > 0$ for the conjunctive case, and $\max(R_i, Q_i) < 1$ for the disjunctive case. The reversal holds independently of the predictive risk magnitude $R_i$ (resp. $R_j$).
+
+\item Under the non-linear compensatory regime modeled by the weighted geometric mean $A_G$, assuming strictly positive inputs, a rank reversal occurs ($P_j > P_i$) if and only if the logarithmic ratio of contextual advantage satisfies:
+\begin{equation}
+\ln\left(\frac{Q_j}{Q_i}\right) > \frac{\lambda}{1-\lambda} \ln\left(\frac{R_i}{R_j}\right).
+\end{equation}
+\end{enumerate}
+\end{Proposition}
+
+\begin{proof}
+For part (1), we establish the equivalence by starting from the rank reversal condition:
+$$P_j > P_i \iff \lambda R_j + (1-\lambda) Q_j > \lambda R_i + (1-\lambda) Q_i.$$
+Rearranging the terms—a strictly reversible algebraic operation—yields:
+$$\iff (1-\lambda)(Q_j - Q_i) > \lambda (R_i - R_j).$$
+Given $\Delta Q = Q_j - Q_i$, and since $\lambda \in (0,1)$ ensures $(1-\lambda) > 0$, we can divide both sides by $(1-\lambda)$ without altering the inequality's direction or the logical equivalence:
+$$\iff \Delta Q > \frac{\lambda}{1-\lambda}(R_i - R_j).$$
+This establishes both the necessary and sufficient conditions for the rank reversal under linear aggregation.
+
+For part (2), we analyze the two dual regimes. In the conjunctive case, since $Q_i = 0$, we have $P_i = \min(R_i, 0) = 0$. Given $R_j > 0$ and $Q_j > 0$, it follows that $P_j = \min(R_j, Q_j) > 0$, hence $P_j > P_i$ regardless of the value of $R_i$. In the disjunctive case, since $Q_j = 1$, we have $P_j = \max(R_j, 1) = 1$. Given $\max(R_i, Q_i) < 1$, it follows that $P_i = \max(R_i, Q_i) < 1$, hence $P_j > P_i$ regardless of the value of $R_j$.
+
+Finally, for part (3), assuming $R_i, R_j, Q_i, Q_j > 0$, the rank reversal condition under the weighted geometric mean is:
+$$P_j > P_i \iff R_j^\lambda Q_j^{1-\lambda} > R_i^\lambda Q_i^{1-\lambda}.$$
+Taking the natural logarithm of both sides—a strictly monotonically increasing transformation that preserves the inequality—yields:
+$$\iff \lambda \ln(R_j) + (1-\lambda) \ln(Q_j) > \lambda \ln(R_i) + (1-\lambda) \ln(Q_i).$$
+Rearranging the terms gives:
+$$\iff (1-\lambda)(\ln(Q_j) - \ln(Q_i)) > \lambda (\ln(R_i) - \ln(R_j)).$$
+Using logarithmic properties and dividing by $(1-\lambda) > 0$, we obtain the desired equivalence:
+\[
+\iff \ln\left(\frac{Q_j}{Q_i}\right) > \frac{\lambda}{1-\lambda} \ln\left(\frac{R_i}{R_j}\right).
+\]
+This completes the proof.
+\end{proof}
+
+The first part of Proposition~\ref{prop:rank_reversal} establishes the compensation boundary inherent to linear aggregation: a low contextual score $Q_i$ can always be offset by a sufficiently large predictive risk differential. This reflects a fully compensatory governance logic, where contextual signals act as soft adjustments rather than binding constraints. In contrast, the second part encodes a strict non-compensatory logic: under the min operator, a zero contextual score acts as an institutional veto that cannot be overcome by any predictive evidence. This forces a rank reversal that protects policy compliance at the expense of predictive optimality, making the min aggregator suitable for domains where contextual rules represent mandatory requirements.
+
+Regarding the third part, the geometric mean introduces an intermediate, non-linear compensatory regime. The rank reversal threshold now depends on the logarithmic ratio of scores, implying that compensation is asymmetric and scale-dependent. Small absolute differences in low-score regions can have a disproportionately large impact, while large differences in high-score regions may be less influential. This behavior reflects diminishing marginal returns—a common property in many real-world decision contexts—and offers a flexible middle ground between full compensation and strict veto, allowing designers to tailor the sensitivity of the aggregation to the relative magnitudes of risk and context.
+
+Together, these three regimes illustrate a spectrum of governance semantics, from fully compensatory to strictly veto-based, with the geometric mean occupying a balanced intermediate position. This spectrum provides decision system designers with a clear mathematical framework for encoding organizational priorities, ranging from flexible trade-offs to hard institutional constraints.
+
+The second structural property addresses the complementary situation where contextual conditions are homogeneous across alternatives.
+
+\begin{Proposition}[Contextual Homogeneity and Predictive Rank Preservation]
+\label{prop:cont_homog_rank_preserv}
+    Let $Y \subseteq X$ be a subset of alternatives sharing a homogeneous contextual evaluation, such that $Q_i = q$ for all $i \in Y$, with $q > 0$. For any aggregation operator $A(R_i, Q_i)$ that is strictly monotonic with respect to its first argument when $Q_i > 0$, the strict ordinal ranking induced by the predictive model is fully preserved within $Y$. That is:
+\begin{equation}
+P_i > P_j \iff R_i > R_j \quad \forall i,j \in Y.
+\end{equation}
+\end{Proposition} 
+
+\begin{proof}
+Since $Q_i = Q_j = q$ for any $i,j \in Y$, the aggregated scores are $P_i = A(R_i, q)$ and $P_j = A(R_j, q)$.
+The direct implication ($R_i > R_j \implies P_i > P_j$) follows directly from the strict monotonicity of $A$ with respect to its first argument (with the second fixed at $q > 0$). For the reverse implication ($P_i > P_j \implies R_i > R_j$), we proceed by contraposition: if we assume $R_i \leq R_j$, the strict monotonicity condition would require $A(R_i, q) \leq A(R_j, q)$, meaning $P_i \leq P_j$. This contradicts our initial premise. Therefore, the double implication holds: 
+\[
+P_i > P_j \iff R_i > R_j
+\]
+ensuring that the strict ordinal ranking induced by the predictive model is fully preserved.
+\end{proof}
+
+Proposition~\ref{prop:cont_homog_rank_preserv} guarantees a form of structural stability for the decision system. It ensures that the introduction of fuzzy contextual operators does not arbitrarily disrupt the predictive ranking when there is no contextual reason to differentiate between cases. When institutional policies treat a group of cases equally (i.e., contextual homogeneity), the decision framework automatically defaults to a purely data-driven ordering, fully respecting the underlying risk hierarchy learned by the machine learning components.
+
+Together, these propositions establish the theoretical bounds for the experimental analysis conducted in the following sections. Proposition~\ref{prop:rank_reversal} defines the scenarios where context can (or cannot) override prediction, distinguishing between linear, non-linear compensatory, and veto-based regimes, while Proposition~\ref{prop:cont_homog_rank_preserv} ensures that such overrides do not occur arbitrarily, preserving the integrity of the predictive evidence under homogeneous conditions. In the next section, we instantiate these aggregation regimes within a concrete case study to observe how these structural properties manifest in practical decision landscapes and affect rank stability under uncertainty.
+
+\section{Experimental Design and Simulation Framework}\label{sect:experimental_design}
+
+To validate the theoretical insights established in Proposition~\ref{prop:rank_reversal} and Proposition~\ref{prop:cont_homog_rank_preserv}, we design a controlled simulation framework. Rather than restricting our analysis to a single empirical dataset, a simulation approach allows us to stress-test the CADEMAS integration layer under extreme and highly realistic algorithmic failure modes, such as predictive miscalibration and systemic policy violations.
+
+\subsection{General Configuration and Data Generation}\label{subsect:simulation_config}
+
+We simulate a universe of decision alternatives $X = \{1, \dots, n\}$ with $n = 1000$. The system's goal is to select a prioritized subset of size $K = \lfloor 0.10 \times n \rfloor = 100$, representing a resource-constrained scenario where only the top 10\% highest-priority alternatives receive intervention according to the ranking $\pi_A$. All simulations are implemented in Python~3; the source code is available in the project repository under \texttt{experiments/}.
+
+\paragraph{Monte Carlo replication and reported statistics.}
+Because each trial draws a fresh stochastic population (and, in RQ3, fresh noise realizations), a single run could overfit to one random seed. We therefore repeat every experiment over $N = 30$ independent Monte Carlo trials with seeds $0, \dots, 29$, holding $n = 1000$ fixed within each trial. For any metric $m$ (e.g., $V_K$, $\bar{R}_K$, or $\tau$) evaluated at a given control setting, let $m^{(1)}, \dots, m^{(N)}$ denote the trial-wise values. Figures plot the Monte Carlo mean $\bar{m} = \frac{1}{N}\sum_{r=1}^{N} m^{(r)}$; shaded bands span the 2.5th and 97.5th percentiles across trials, forming a non-parametric 95\% CI that captures sampling variability from data generation without assuming normality. Qualitative claims about operator \emph{regimes} (e.g., zero violations under $Q_i = 0$ for $A_T^{\min}$ and $A_G$) refer to outcomes observed in all $N$ trials; quantitative summaries for $A_L$ are reported as $(\bar{m}, \text{CI}_{95\%})$.
+
+\paragraph{RQ1 and RQ2 (veto-stressed populations).}
+Both experiments inject two sub-populations:
+\begin{itemize} 
+    \item \textbf{Standard Sub-population ($X_{\text{std}}$, 80\%):} Alternatives where $R_i, Q_i \sim \mathcal{U}(0,1)$.
+    \item \textbf{Critical Veto Sub-population ($X_{\text{veto}}$, 20\%):} Alternatives with absolute policy violation ($Q_i = 0$). For RQ1, veto-group risk is elevated and fixed across the $\lambda$ sweep ($R_i \sim \mathcal{B}(8,2)$). For RQ2, the standard sub-population is held fixed across trials while veto-group risk is adversarially shifted as $R_i \sim \mathcal{N}(\mu_{\text{shift}}, 0.05^2)$, with $\mu_{\text{shift}} \in [0.5, 1.0]$.
+\end{itemize}
+
+\paragraph{RQ3 (unstratified population).}
+To isolate contextual noise propagation, we draw $R_i, Q_i \sim \mathcal{U}(0,1)$ for all $n = 1000$ alternatives without injecting a veto sub-population. Gaussian perturbations are applied as $Q_i' = \max(0, \min(1, Q_i + \epsilon))$ with $\epsilon \sim \mathcal{N}(0, \sigma^2)$ and $\sigma \in [0, 0.5]$.
+
+\paragraph{Operators and trade-off parameters.}
+We evaluate linear ($A_L$), conjunctive minimum ($A_T^{\min}$), and weighted geometric mean ($A_G$), but not all three in every experiment:
+\begin{itemize}
+    \item \textbf{RQ1:} $A_L$ and $A_G$ only; $\lambda$ swept over $[0.05, 0.95]$ (19 evenly spaced values).
+    \item \textbf{RQ2:} $A_L$, $A_T^{\min}$, and $A_G$; $\lambda = 0.85$ fixed. This data-driven setting is chosen because at $\lambda = 0.5$ vetoed alternatives are capped at $P_i \leq 0.5$, masking the compensatory vulnerability of $A_L$.
+    \item \textbf{RQ3:} $A_L$ and $A_T^{\min}$ only; $\lambda = 0.35$ fixed to grant the contextual layer sufficient weight so that noise in $Q_i$ materially affects the ranking.
+\end{itemize}
+Multi-operator figures use a consistent visual encoding from the \texttt{magma} sequential palette ($A_L$, $A_T^{\min}$, $A_G$ at colormap positions $t \approx 0.28, 0.52, 0.76$), ordered linear $\rightarrow$ min $\rightarrow$ geometric in legends and panels. Curves show Monte Carlo means; shaded bands indicate 95\% trial-wise intervals.
+ 
+\subsection{Research Questions and Evaluation Metrics}\label{subsect:rq_metrics}
+
+The experimental evaluation is structured around three core Research Questions (RQs) designed to expose the operational vulnerabilities of linear integration and the systemic advantages of non-linear fuzzy regimes:
+
+\begin{enumerate}
+    \item[\textbf{RQ1.}] \textbf{Resource Opportunity Cost:} As $\lambda$ increases, how far can each aggregation regime push toward a data-driven prioritization before institutional compliance ($V_K = 0$) breaks down, and what predictive efficiency ($\bar{R}_K$) is achievable within the compliant region?
+    \item[\textbf{RQ2.}] \textbf{Algorithmic Firewalling against Localized Bias:} How vulnerable is the decision framework when the ML model generates targeted false alarms (overconfidence) against institutionally restricted sub-populations?
+    \item[\textbf{RQ3.}] \textbf{Robustness to Contextual Vagueness:} How does uncertainty and measurement noise in the fuzzy contextual evaluation ($Q_i$) propagate into the final decision ranking?
+\end{enumerate}
+
+To quantify these phenomena, we define three operational metrics, computed trial-wise for the constrained Top-$K$ prioritization scenario ($K = 100$) and then aggregated across Monte Carlo replicates:
+\begin{itemize}
+    \item \textbf{Policy Violation Rate ($V_K$):} The proportion of the prioritized Top-$K$ tier belonging to the vetoed sub-population ($X_{\text{veto}}$). Reported as $\bar{V}_K$ with 95\% trial-wise intervals in Figures~\ref{fig:opportunity_cost} and~\ref{fig:algorithmic_firewall}.
+    \item \textbf{Predictive Efficiency ($\bar{R}_K$):} The average pure machine learning risk ($R_i$) of the compliant (non-vetoed) standard cases selected in the Top-$K$ tier. Higher values indicate better utilization of the predictive model's intelligence (Figure~\ref{fig:opportunity_cost}b).
+    \item \textbf{Rank Stability under Noise ($\tau(\sigma)$):} Kendall's $\tau$ between the ranking at $\sigma=0$ and the ranking induced after perturbing $Q_i$ with noise level $\sigma$. Reported as $\bar{\tau}(\sigma)$ with 95\% trial-wise intervals in Figure~\ref{fig:noise_propagation}.
+\end{itemize}
+
+\section{Systemic Simulation Results}\label{sect:results}
+
+This section presents the empirical validation of the architectural trade-offs within the CADEMAS framework, linking each research question to the structural properties established in Proposition~\ref{prop:rank_reversal} (compensation vs.\ veto semantics) and Proposition~\ref{prop:cont_homog_rank_preserv} (rank preservation under stable context). All curves show Monte Carlo means over $N = 30$ trials; shaded envelopes indicate 95\% trial-wise intervals (Section~\ref{subsect:simulation_config}). We interpret differences as \emph{structurally robust} when they hold for every trial (e.g., $\bar{V}_K = 0$ for non-linear operators in RQ2), and as \emph{statistically supported} when mean trajectories diverge with non-overlapping interval bands (e.g., RQ3 at $\sigma = 0.5$).
+
+\subsection{RQ1: The Opportunity Cost of Linear Compliance}\label{subsect:results_rq1}
+
+A robust decision system must enforce institutional vetoes ($V_K = 0$) without squandering resources on low-risk cases. Following the RQ1 protocol in Section~\ref{subsect:simulation_config}, Figure~\ref{fig:opportunity_cost} traces $\bar{V}_K$ and $\bar{R}_K$ for $A_L$ and $A_G$ as $\lambda$ varies over $[0.05, 0.95]$.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/opportunity_cost.pdf}
+\caption{Opportunity cost of policy enforcement ($N = 30$ Monte Carlo trials). Solid curves: mean; shaded bands: 95\% trial-wise interval. (\textbf{a})~Policy violation rate: $A_L$ remains robustly compliant ($\bar{V}_K = 0$ in all trials) for $\lambda \lesssim 0.75$; mean violations then rise sharply, reaching $\bar{V}_K \approx 0.25$ at $\lambda = 0.95$. $A_G$ maintains $\bar{V}_K = 0$ across the full sweep. (\textbf{b})~Predictive efficiency: both operators achieve higher $\bar{R}_K$ as $\lambda$ increases within the compliant region; at $\lambda = 0.80$, $\bar{R}_K \approx 0.92$ for $A_L$; at $\lambda = 0.95$, $A_G$ reaches $\bar{R}_K \approx 0.93$ without violations.}
+\label{fig:opportunity_cost} 
+\end{figure}
+
+The results reveal a structural compliance ceiling in the linear regime. Contrary to the intuition that strict compliance requires down-weighting predictive evidence, $A_L$ can keep $\bar{V}_K \approx 0$ up to $\lambda \approx 0.75$--$0.80$, and $\bar{R}_K$ \emph{increases} monotonically with $\lambda$ over that range (from $\approx 0.53$ at $\lambda = 0.05$ to $\approx 0.92$ at $\lambda = 0.80$). The operational failure appears when the decision-maker pushes further toward a data-driven regime: at $\lambda = 0.95$, $\bar{V}_K \approx 0.25$ (95\% CI: $[0.14, 0.34]$) even though $\bar{R}_K \approx 0.95$. This behavior is exactly the compensatory logic characterized in Proposition~\ref{prop:rank_reversal}(1): when $\lambda$ is large, a sufficiently elevated $R_i$ on a vetoed alternative can offset $Q_i = 0$, allowing policy-violating cases to enter the Top-$K$ tier.
+
+By contrast, $A_G$ enforces a hard contextual boundary: any $Q_i = 0$ implies $P_i = 0$ regardless of $\lambda$, so $\bar{V}_K = 0$ in all 30 trials through $\lambda = 0.95$. The opportunity cost of linear integration is therefore not a permanent sacrifice of predictive utility at conservative $\lambda$ values, but the inability to operate at high-$\lambda$, high-utility settings without breaching organizational policy---a distinction visible in the widening violation band for $A_L$ in Figure~\ref{fig:opportunity_cost}a while $A_G$ remains flat at zero. Non-linear aggregation extends the Pareto-efficient compliance region available to hybrid ADM systems.
+
+\subsection{RQ2: Algorithmic Firewalling Against Targeted Overconfidence}\label{subsect:results_rq2}
+
+Machine learning models frequently suffer from sub-population bias, generating localized false positive spikes. Following the RQ2 protocol in Section~\ref{subsect:simulation_config}, we inject an adversarial shift into $X_{\text{veto}}$ and evaluate how effectively each aggregation operator prevents localized false alarms from bypassing the contextual policy.
+
+As noted in the experimental design, $\lambda = 0.5$ would cap vetoed alternatives at $P_i \leq 0.5$, organically preventing them from entering the Top-$K$ subset ($K=100$) where the empirical cutoff typically exceeds $0.7$. The fixed setting $\lambda = 0.85$ therefore exposes the compensatory vulnerability of $A_L$. As shown in Figure~\ref{fig:algorithmic_firewall}, targeted ML overconfidence on the vetoed sub-population produces a monotonic escalation of $\bar{V}_K$ for $A_L$ once $\mu_{\text{shift}} \gtrsim 0.80$, whereas $A_T^{\min}$ and $A_G$ remain impervious in every trial.
+
+\begin{figure}[t]   
+\centering
+\includegraphics[width=\textwidth]{figures/algorithmic_firewall.pdf}
+\caption{Algorithmic firewall under targeted ML overconfidence ($\lambda = 0.85$; $N = 30$ trials). Solid curves: mean; shaded bands: 95\% trial-wise interval. Operators shown in order $A_L$, $A_T^{\min}$, $A_G$. For $A_L$, $\bar{V}_K$ stays near zero while $\mu_{\text{shift}} \lesssim 0.75$, then rises monotonically to $\bar{V}_K \approx 0.30$ at $\mu_{\text{shift}} = 1.0$ (95\% CI: $[0.10, 0.48]$). $A_T^{\min}$ and $A_G$ maintain $\bar{V}_K = 0$ throughout---the bands collapse to the horizontal axis.}
+\label{fig:algorithmic_firewall}
+\end{figure}
+
+Figure~\ref{fig:algorithmic_firewall} demonstrates the fragility of compensatory linearity under data-driven prioritization. As the ML model becomes increasingly overconfident regarding the restricted cases ($\mu_{\text{shift}} \to 1$), $A_L$ allows inflated risk scores to override zero contextual compliance, with $\bar{V}_K \approx 0.30$ on average---nearly one third of the Top-$K$ tier consists of institutionally vetoed alternatives. The wide shaded band for $A_L$ reflects substantial trial-to-trial variability in how many vetoed cases breach the cutoff once $\mu_{\text{shift}}$ exceeds $\approx 0.80$. In stark contrast, both non-linear regimes ($A_T^{\min}$ and $A_G$) maintain $\bar{V}_K = 0$ throughout the adversarial shift in every trial, confirming a structurally robust firewall rather than a sampling artefact.
+
+This pattern aligns with Proposition~\ref{prop:rank_reversal}: part~(1) explains why $A_L$ admits vetoed alternatives once predictive scores dominate ($\lambda = 0.85$), whereas part~(2) guarantees that $A_T^{\min}$ assigns $P_i = 0$ whenever $Q_i = 0$, and $A_G$ enforces the same contextual boundary because $Q_i = 0$ zeroes the aggregated score. Together, these non-linear operators function as an \emph{algorithmic firewall}, insulating the organization's strategic directives from localized predictive failures and uncalibrated ML outputs.
+
+\subsection{RQ3: Robustness to Contextual Vagueness and Noise Propagation}\label{subsect:results_rq3} 
+
+Unlike crisp probabilistic outputs, contextual scores $Q_i$ derived from fuzzy rules or human expert evaluations are inherently vague and subject to measurement noise (see Section~\ref{subsect:simulation_config} for the perturbation protocol). We measure rank stability as $\bar{\tau}(\sigma)$, the Monte Carlo mean of Kendall's $\tau$ between the ranking at $\sigma = 0$ and the ranking induced under each noise level.
+
+Figure~\ref{fig:noise_propagation} reports $\bar{\tau}(\sigma)$ for $A_L$ and $A_T^{\min}$ at $\lambda = 0.35$; at $\sigma = 0$, both operators reproduce the baseline ranking exactly ($\tau = 1.00$ in every trial).
+
+\begin{figure}[t] 
+\centering
+\includegraphics[width=\textwidth]{figures/noise_propagation.pdf}
+\caption{Rank stability under contextual noise ($\lambda = 0.35$; $N = 30$ trials). Solid curves: mean $\bar{\tau}(\sigma)$; shaded bands: 95\% trial-wise interval. At $\sigma = 0.5$, $\bar{\tau} \approx 0.40$ for $A_L$ (95\% CI: $[0.38, 0.43]$) vs.\ $\bar{\tau} \approx 0.47$ for $A_T^{\min}$ (95\% CI: $[0.44, 0.50]$); the bands do not overlap, supporting a robust ranking-stability advantage for the conjunctive operator under moderate vagueness.}
+\label{fig:noise_propagation}
+\end{figure}
+
+The noise propagation dynamics (Figure~\ref{fig:noise_propagation}) highlight a non-trivial property of fuzzy aggregation beyond the homogeneous baseline of Proposition~\ref{prop:cont_homog_rank_preserv}. Once contextual homogeneity is broken by noise, $A_L$ transmits perturbations globally and symmetrically: any fluctuation in $Q_i$ directly perturbs $P_i = \lambda R_i + (1-\lambda) Q_i$, producing a steep decline in $\bar{\tau}$ (from $1.00$ to $\approx 0.40$ at $\sigma = 0.5$). The narrow band for $A_L$ indicates consistent degradation across trials. By contrast, $A_T^{\min}$ exhibits structural ``shock absorption'': whenever $R_i \leq Q_i$, we have $A_T^{\min}(R_i, Q_i) = R_i$, so fluctuations in $Q_i$ above the risk threshold leave $P_i$ unchanged, yielding $\bar{\tau} \approx 0.47$ at $\sigma = 0.5$. This selective sensitivity makes the decision framework more robust to the inherent vagueness of institutional knowledge engineering when the appropriate fuzzy aggregator is deployed.
+
+\section{A Real Example}\label{sect:real_example}
+
+The simulation study isolates structural regimes under adversarial conditions. To anchor these findings in a published CADEMAS instantiation \cite{Godz2026}, we reapply $A_L$, $A_T^{\min}$, and $A_G$ to the employee-attrition demo cohort ($n = 20$) distributed with the CADEMAS-ML open-source tool\footnote{\url{https://github.com/pnovoa/cademas-app/tree/main/example_attrition}.}, drawn from the IBM HR Analytics dataset.
+
+\paragraph{Predictive and contextual inputs.}
+Four H2O AutoML models---Culture and Wellbeing, Finance, Operations and Development, and Human Resources---produce case-level attrition probabilities that are AUC-weighted into a cooperative risk score $R_i \in [0,1]$. Contextual alignment $Q_i$ is computed from the \textit{Digital / Technological Transformation} fuzzy specification (upskilling capacity, role adaptability, career scalability, and investment horizon), yielding $Q_i \in [0.15, 0.71]$ on this cohort. The scores $R_i$ and $Q_i$ were exported once from CADEMAS-ML and vendored in the repository (\texttt{experiments/data/attrition/}); the attrition outcome label is retained for verification only and does not enter $P_i$.
+
+\paragraph{Operator comparison.}
+We set $\lambda = 0.5$ (balanced risk--context trade-off, as in \cite{Godz2026}) and compare full-cohort rankings under the three integration regimes. Figure~\ref{fig:real_example}a locates each employee in the $(Q_i, R_i)$ plane; Figure~\ref{fig:real_example}b reports the Top-$K$ prioritization tier with $K = 2$ (10\% of the cohort), mimicking a resource-constrained retention programme.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/real_example.pdf}
+\caption{Real attrition example ($n = 20$, Digital Transformation context, $\lambda = 0.5$). \textbf{(a)}~Cooperative risk $R_i$ vs.\ context score $Q_i$; highlighted cases illustrate contrasting risk--context profiles. \textbf{(b)}~Top-$K$ prioritization scores ($K = 2$) under $A_L$, $A_T^{\min}$, and $A_G$.}
+\label{fig:real_example}
+\end{figure}
+
+Table~\ref{tab:real_example} reports the full prioritization landscape. At $\lambda = 0.5$, all three operators agree on the Top-$K$ tier: \textit{Evelyn Taylor} ($R_i = 0.96$, $Q_i = 0.70$) and \textit{Amelia Davis} ($R_i = 0.99$, $Q_i = 0.59$), both with confirmed attrition in the hold-out label. This consensus reflects jointly elevated risk and contextual alignment---the regime where Proposition~\ref{prop:cont_homog_rank_preserv} does not bind and operator choice is empirically secondary at the very top of the ranking.
+
+Below the Top-$K$ cutoff, semantic differences emerge even without absolute policy vetoes ($Q_i > 0$ for all cases). \textit{Lucas Wright} carries the highest cooperative risk in the cohort ($R_i = 0.99$) but ranks seventh under every operator because his contextual score is low ($Q_i = 0.34$); under $A_L$ and $A_G$, high $R_i$ partially compensates ($P_i = 0.66$ and $0.58$, respectively), whereas $A_T^{\min}$ caps $P_i$ at $Q_i$. The contrasting case is \textit{Noah Lewis}, who attains the maximum contextual score ($Q_i = 0.71$) yet minimal predictive risk ($R_i = 0.07$). Linear integration yields $P_i = 0.39$ (rank~11), while $A_T^{\min}$ collapses to $P_i = 0.07$ (rank~14) and $A_G$ to $0.22$ (rank~13): strong contextual alignment cannot lift a low-risk employee into the intervention tier when the integration layer is risk-aware or conjunctive. Intermediate rank reversals appear among high-risk attrition cases---for example, \textit{Benjamin Scott} moves from rank~5 under $A_L$ to rank~3 under $A_T^{\min}$ and $A_G$ because his contextual score ($Q_i = 0.46$) exceeds that of peers with similar $R_i$.
+
+These patterns complement the simulation results: RQ1--RQ2 stress-test veto and overconfidence under synthetic $Q_i = 0$ sub-populations, whereas this real cohort shows how compensation and conjunctive semantics reorder \emph{borderline} cases when both $R_i$ and $Q_i$ are strictly positive. RQ3's noise-robustness advantage for $A_T^{\min}$ has a qualitative analogue here---contextual fluctuations above the risk floor cannot inflate $P_i$ when $R_i \ll Q_i$.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Prioritization scores and ranks for the CADEMAS-ML attrition cohort ($\lambda = 0.5$, Digital Transformation context). Ranks are computed over all $n = 20$ cases (1 = highest $P_i$).}
+\label{tab:real_example}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+\textbf{Case} & $R_i$ & $Q_i$ & $P_i^{(L)}$ & $P_i^{(\min)}$ & $P_i^{(G)}$ & $r^{(L)}$ & $r^{(\min)}$ & $r^{(G)}$ & \textbf{Attr.} \\
+\midrule
+Evelyn Taylor    & 0.9555 & 0.7000 & 0.8278 & 0.7000 & 0.8178 & 1  & 1  & 1  & Yes \\
+Amelia Davis     & 0.9879 & 0.5914 & 0.7896 & 0.5914 & 0.7644 & 2  & 2  & 2  & Yes \\
+Theodore Adams   & 0.9803 & 0.4400 & 0.7101 & 0.4400 & 0.6568 & 3  & 5  & 5  & Yes \\
+William Young    & 0.9751 & 0.4450 & 0.7100 & 0.4450 & 0.6587 & 4  & 4  & 4  & Yes \\
+Benjamin Scott   & 0.9622 & 0.4550 & 0.7086 & 0.4550 & 0.6617 & 5  & 3  & 3  & Yes \\
+Charlotte Miller & 0.9204 & 0.4250 & 0.6727 & 0.4250 & 0.6254 & 6  & 6  & 6  & Yes \\
+Lucas Wright     & 0.9882 & 0.3350 & 0.6616 & 0.3350 & 0.5754 & 7  & 7  & 7  & Yes \\
+Harper Wilson    & 0.9641 & 0.2700 & 0.6170 & 0.2700 & 0.5102 & 8  & 8  & 8  & Yes \\
+Henry King       & 0.9676 & 0.1700 & 0.5688 & 0.1700 & 0.4056 & 9  & 10 & 9  & Yes \\
+Abigail Anderson & 0.9796 & 0.1500 & 0.5648 & 0.1500 & 0.3833 & 10 & 11 & 10 & Yes \\
+Noah Lewis       & 0.0651 & 0.7100 & 0.3876 & 0.0651 & 0.2150 & 11 & 14 & 13 & No \\
+Olivia Johnson   & 0.1234 & 0.6057 & 0.3646 & 0.1234 & 0.2734 & 12 & 12 & 11 & No \\
+Oliver Walker    & 0.0039 & 0.6886 & 0.3462 & 0.0039 & 0.0518 & 13 & 17 & 17 & No \\
+Emma Smith       & 0.0388 & 0.6420 & 0.3404 & 0.0388 & 0.1578 & 14 & 15 & 15 & No \\
+Sophia Brown     & 0.0037 & 0.5800 & 0.2918 & 0.0037 & 0.0463 & 15 & 18 & 18 & No \\
+Liam Clark       & 0.1713 & 0.3900 & 0.2806 & 0.1713 & 0.2585 & 16 & 9  & 12 & No \\
+Elijah Allen     & 0.0012 & 0.5600 & 0.2806 & 0.0012 & 0.0259 & 17 & 20 & 20 & No \\
+Mia Jones        & 0.0032 & 0.5200 & 0.2616 & 0.0032 & 0.0408 & 18 & 19 & 19 & No \\
+James Hall       & 0.0113 & 0.4200 & 0.2156 & 0.0113 & 0.0689 & 19 & 16 & 16 & No \\
+Ava Williams     & 0.1210 & 0.2275 & 0.1743 & 0.1210 & 0.1659 & 20 & 13 & 14 & No \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion and Managerial Implications}\label{sect:discussion}
+
+\section{Conclusion and Future Directions}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\authorcontributions{For research articles with several authors, a short paragraph specifying their individual contributions must be provided. The following statements should be used ``Conceptualization, X.X. and Y.Y.; methodology, X.X.; software, X.X.; validation, X.X., Y.Y. and Z.Z.; formal analysis, X.X.; investigation, X.X.; resources, X.X.; data curation, X.X.; writing---original draft preparation, X.X.; writing---review and editing, X.X.; visualization, X.X.; supervision, X.X.; project administration, X.X.; funding acquisition, Y.Y. All authors have read and agreed to the published version of the manuscript.'', please turn to the  \href{http://img.mdpi.org/data/contributor-role-instruction.pdf}{CRediT taxonomy} for the term explanation. Authorship must be limited to those who have contributed substantially to the work~reported.}
+
+\funding{Please add: ``This research received no external funding'' or ``This research was funded by NAME OF FUNDER grant number XXX''. Check carefully that the details given are accurate and use the standard spelling of funding agency names at \url{https://search.crossref.org/funding}, any errors may affect your future funding.}
+
+\institutionalreview{Not applicable.}
+
+\informedconsent{Not applicable.}
+
+\dataavailability{Simulation code and figure scripts are available in the project repository under \texttt{experiments/}. The real attrition example uses the CADEMAS-ML \texttt{example\_attrition} bundle (\url{https://github.com/pnovoa/cademas-app/tree/main/example_attrition}): case features (\texttt{cases\_atttrition.csv}), precomputed cooperative risk and fuzzy context scores (\texttt{experiments/data/attrition/attrition\_scores.csv}), and H2O MOJO models for score regeneration (\texttt{experiments/scripts/export\_attrition\_scores.py}). The underlying IBM HR Analytics dataset is publicly available on Kaggle.} 
+
+%\durcstatement{Current research is limited to the [please insert a specific academic field, e.g., XXX], which is beneficial [share benefits and/or primary use] and does not pose a threat to public health or national security. Authors acknowledge the dual-use potential of the research involving xxx and confirm that all necessary precautions have been taken to prevent potential misuse. As an ethical responsibility, authors strictly adhere to relevant national and international laws about DURC. Authors advocate for responsible deployment, ethical considerations, regulatory compliance, and transparent reporting to mitigate misuse risks and foster beneficial outcomes.}
+
+% Only for journal Nursing Reports
+%\publicinvolvement{Please describe how the public (patients, consumers, carers) were involved in the research. Consider reporting against the GRIPP2 (Guidance for Reporting Involvement of Patients and the Public) checklist. If the public were not involved in any aspect of the research add: ``No public involvement in any aspect of this research''.}
+%
+%% Only for journal Nursing Reports
+%\guidelinesstandards{Please add a statement indicating which reporting guideline was used when drafting the report. For example, ``This manuscript was drafted against the XXX (the full name of reporting guidelines and citation) for XXX (type of research) research''. A complete list of reporting guidelines can be accessed via the equator network: \url{https://www.equator-network.org/}.}
+%
+%% Only for journal Nursing Reports
+%\useofartificialintelligence{Please describe in detail any and all uses of artificial intelligence (AI) or AI-assisted tools used in the preparation of the manuscript. This may include, but is not limited to, language translation, language editing and grammar, or generating text. Alternatively, please state that “AI or AI-assisted tools were not used in drafting any aspect of this manuscript”.}
+
+\acknowledgments{In this section, you can acknowledge any support given that is not covered by the author contribution or funding sections. This may include administrative and technical support, or donations in kind (e.g., materials used for experiments). Where GenAI has been used for purposes such as generating text, data, or graphics, or for study design, data collection, analysis, or interpretation of data, please add ``During the preparation of this manuscript/study, the author(s) used [tool name, version information] for the purposes of [description of use]. The authors have reviewed and edited the output and take full responsibility for the content of this publication.”}
+
+\conflictsofinterest{The authors declare no conflicts of interest.} 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Optional
+\appendixtitles{no} % Leave argument "no" if all appendix headings stay EMPTY (then no dot is printed after "Appendix A"). If the appendix sections contain a heading then change the argument to "yes".
+\appendixstart
+\appendix
+\section[\appendixname~\thesection]{}
+\subsection[\appendixname~\thesubsection]{}
+
+The appendix is an optional section that can contain details and data supplemental to the main text---for example, explanations of experimental details that would disrupt the flow of the main text but nonetheless remain crucial to understanding and reproducing the research shown; figures of replicates for experiments of which representative data are shown in the main text can be added here if brief, or as Supplementary Materials. Mathematical proofs of results not central to the paper can be added as an appendix.
+
+\begin{table}[H] 
+\caption{This is a table caption.\label{tab5}}
+%\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{tabularx}{\textwidth}{CCC}
+\toprule
+\textbf{Title 1}	& \textbf{Title 2}	& \textbf{Title 3}\\
+\midrule
+Entry 1		& Data			& Data\\
+Entry 2		& Data			& Data\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section[\appendixname~\thesection]{}
+
+All appendix sections must be cited in the main text. In the appendices, figures, tables, etc., should be labeled starting with “A”, e.g., Figure A1, Figure A2, etc.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\isPreprints{}{% This command is only used for ``preprints''.
+\begin{adjustwidth}{-\extralength}{0cm}
+%} % If the paper is ``preprints'', please uncomment this parenthesis.
+%\printendnotes[custom] % Un-comment to print a list of endnotes
+
+\reftitle{References}
+\bibliography{biblio.bib}
+
+% If authors have biography, please use the format below
+%\section*{Short Biography of Authors}
+%\bio
+%{\raisebox{-0.35cm}{\includegraphics[width=3.5cm,height=5.3cm,clip,keepaspectratio]{Definitions/author1.pdf}}}
+%{\textbf{Firstname Lastname} Biography of first author}
+%
+%\bio
+%{\raisebox{-0.35cm}{\includegraphics[width=3.5cm,height=5.3cm,clip,keepaspectratio]{Definitions/author2.jpg}}}
+%{\textbf{Firstname Lastname} Biography of second author}
+
+% For the MDPI journals use author-date citation, please follow the formatting guidelines on http://www.mdpi.com/authors/references
+% To cite two works by the same author: \citeauthor{ref-journal-1a} (\citeyear{ref-journal-1a}, \citeyear{ref-journal-1b}). This produces: Whittaker (1967, 1975)
+% To cite two works by the same author with specific pages: \citeauthor{ref-journal-3a} (\citeyear{ref-journal-3a}, p. 328; \citeyear{ref-journal-3b}, p.475). This produces: Wong (1999, p. 328; 2000, p. 475)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% for journal Sci
+%\reviewreports{\\
+%Reviewer 1 comments and authors’ response\\
+%Reviewer 2 comments and authors’ response\\
+%Reviewer 3 comments and authors’ response
+%}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\PublishersNote{}
+%\isPreprints{}{% This command is only used for ``preprints''.
+\end{adjustwidth}
+%} % If the paper is ``preprints'', please uncomment this parenthesis.
+\end{document}
+

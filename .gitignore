@@ -216,3 +216,33 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.fdb_latexmk
+*.fls
+*.out
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+*.synctex.gz
+*.synctex(busy)
+*.pdfsync
+*.xdv
+*.dvi
+*.figlist
+*.makefile
+*-converted-to.*
+!paper/Definitions/*-converted-to.*
+missfont.log
+
+# Matplotlib cache (experiments)
+.mplconfig/
+experiments/.mplconfig/
