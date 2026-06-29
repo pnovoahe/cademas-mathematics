@@ -1,4 +1,4 @@
-"""Real attrition example: operator comparison on CADEMAS-ML 50-case cohort."""
+"""Real attrition example: operator comparison on the CADEMAS-ML 100-case cohort."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Figures for the real attrition example (50-case CADEMAS-ML cohort)."""
+"""Figures for the real attrition example (100-case CADEMAS-ML cohort)."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ BUMP_SUBPLOT_LEFT = 0.14
 BUMP_SUBPLOT_RIGHT = 0.97
 BUMP_Y_TICK_STEP = 1
 LABEL_FONT = 9
-PLANE_Y_TOP = 1.1
+PLANE_Y_TOP = 1.15
 PLANE_Y_TICK_MAX = 1.0
 COHORT_SCATTER_SIZE = 36
 COHORT_COLOR = "0.62"
@@ -69,7 +69,7 @@ PLANE_LABEL_PROXIMITY = 0.05
 PLANE_LABEL_OVERRIDES: dict[str, str] = {
     "Andrew Wood": "southeast",
     "Eleanor Foster": "northwest",
-    "Laura Baker": "northeast",
+    "Laura Baker": "southeast",
     "Alice Brown": "southeast",
     "Camila Phillips": "southeast",
     "Caroline Bennett": "northeast",
@@ -81,19 +81,34 @@ PLANE_LABEL_OVERRIDES: dict[str, str] = {
     "Jessica Wilson": "southeast",
     "Madison Foster": "southwest",
     "Christian Bennett": "southwest",
+    "Amelia Davis": "northwest",
+    "Noah Murphy": "northeast",
+    "Eleanor Foster": "northeast",
+    "Leah Cooper": "southwest",
+    "Caroline Adams": "northwest",
+    "Claire Bailey": "northwest",
+    "Hunter Adams": "northwest",
 }
 PLANE_LABEL_OFFSET_OVERRIDES: dict[str, tuple[float, float]] = {
+    "Andrew Wood": (-0.028, 0.1),
     "Camila Phillips": (0.022, -0.2),
     "Andrew Ross": (-0.01, -0.06),
-    "Julia Smith": (-0.038, 0.15),
-    "Caroline Roberts": (-0.048, 0.058),
-    "Dominic Collins": (-0.055, 0.035),
+    "Julia Smith": (0.03, 0.1),
+    "Caroline Roberts": (-0.038, 0.28),
+    "Dominic Collins": (-0.02, 0.035),
     "Alice Brown": (0.045, -0.12),
     "Lucy Scott": (-0.03, -0.05),
     "Jessica Wilson": (0.028, -0.24),
     "Madison Foster": (0.01, -0.15),
     "Caroline Bennett": (0.0, 0.1),
     "Christian Bennett": (0.01, -0.1),
+    "Amelia Davis": (-0.028, 0.1),
+    "Noah Murphy": (0.028, 0.1),
+    "Eleanor Foster": (-0.1, 0.08),
+    "Laura Baker": (0.02, 0.02),
+    "Caroline Adams": (0.13, 0.12),
+    "Claire Bailey": (-0.06, 0.08),
+    "Hunter Adams": (-0.07, 0.2),
 }
 PLANE_ADJUST_TEXT = {
     "expand": (1.05, 2.0),
@@ -211,7 +226,7 @@ def _case_colors(case_ids: list[str]) -> dict[str, str]:
 
 
 def _union_styles(df: pd.DataFrame) -> tuple[list[str], dict[str, str]]:
-    """Shared Top-K union cases and colors (aligned with risk--context plane)."""
+    """Shared Top-K union cases and colors (aligned with risk vs. contextt plane)."""
     union_ids = top_k_union(df, k=TOP_K)
     return union_ids, _case_colors(union_ids)
 
@@ -484,7 +499,7 @@ def plot_risk_context_plane(
 
     ax.set_xlabel(r"Context score $Q_i$ (Digital Transformation)")
     ax.set_ylabel(r"Cooperative risk $R_i$")
-    ax.set_title("Risk--context plane", fontweight="bold")
+    ax.set_title("Risk vs. Contextt plane", fontweight="bold")
     ax.set_xlim(-0.02, x_max)
     ax.set_ylim(-0.02, PLANE_Y_TOP)
     ax.yaxis.set_major_locator(FixedLocator(_plane_yticks()))
@@ -637,18 +652,22 @@ def plot_real_example(df: pd.DataFrame) -> tuple[Path, Path]:
 
 
 def results_table_latex(df: pd.DataFrame, k: int = TOP_K) -> str:
-    """Generate LaTeX tabular rows for the Top-K cases by baseline linear score."""
+    """Generate LaTeX tabular rows for baseline Top-K plus ghost entrants."""
+    baseline_ids = _baseline_top_k_ids(df)
+    ghost_ids = set(_ghost_case_ids(df, baseline_ids))
+    union_ids = top_k_union(df, k=k)
     score_cols = [f"P_{key}" for key in OPERATORS]
     rank_cols = [f"rank_{key}" for key in OPERATORS]
     cols = ["case_id", "R", "Q", "attrition"] + score_cols + rank_cols
-    sub = df.nlargest(k, f"P_{BASELINE_KEY}")[cols]
     lines = []
-    for _, row in sub.iterrows():
+    for cid in union_ids:
+        row = df.loc[df["case_id"] == cid, cols].iloc[0]
         name = row["case_id"]
         attr = "Yes" if str(row["attrition"]).lower() in ("yes", "true", "1") else "No"
+        ghost = "Yes" if name in ghost_ids else "No"
         scores = " & ".join(f"{row[f'P_{key}']:.4f}" for key in OPERATORS)
         ranks = " & ".join(str(int(row[f"rank_{key}"])) for key in OPERATORS)
         lines.append(
-            f"{name} & {row['R']:.4f} & {row['Q']:.4f} & {scores} & {ranks} & {attr} \\\\"
+            f"{name} & {row['R']:.4f} & {row['Q']:.4f} & {scores} & {ranks} & {ghost} & {attr} \\\\"
         )
     return "\n".join(lines)
