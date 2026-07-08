@@ -5,7 +5,7 @@ import pandas as pd
 
 from operators import aggregate
 from systemic_config import (
-    FIREWALL_LAMBDA,
+    PREDICTIVE_OVERCONFIDENCE_LAMBDA,
     K,
     MC_SEED_BASE,
     MU_SHIFT_MAX,
@@ -64,11 +64,12 @@ def run_opportunity_cost_experiment(rng: np.random.Generator) -> pd.DataFrame:
     return pd.DataFrame(records)
 
 
-def run_algorithmic_firewall_experiment(rng: np.random.Generator) -> pd.DataFrame:
+def run_predictive_overconfidence_experiment(rng: np.random.Generator) -> pd.DataFrame:
     """
     Exp 2: Fix lambda; inflate veto-group ML risk R ~ N(mu_shift, 0.05).
-    Uses lambda=0.5 per spec; if violations are too rare at 0.5, FIREWALL_LAMBDA
-    in systemic_config can be raised (see module docstring in run script output).
+    Uses lambda=0.5 per spec; if violations are too rare at 0.5,
+    PREDICTIVE_OVERCONFIDENCE_LAMBDA in systemic_config can be raised
+    (see module docstring in run script output).
     """
     mu_vals = np.linspace(MU_SHIFT_MIN, MU_SHIFT_MAX, MU_SHIFT_POINTS)
     records = []
@@ -83,7 +84,7 @@ def run_algorithmic_firewall_experiment(rng: np.random.Generator) -> pd.DataFram
         df.loc[df["group"] == "std", "Q"] = std_q
 
         for op in ("linear", "geometric", "min"):
-            _, v_k, _ = _evaluate(df, op, FIREWALL_LAMBDA)
+            _, v_k, _ = _evaluate(df, op, PREDICTIVE_OVERCONFIDENCE_LAMBDA)
             records.append({"mu_shift": mu, "operator": op, "v_k": v_k})
 
     return pd.DataFrame(records)
@@ -148,12 +149,12 @@ def run_opportunity_cost_mc(
     return _aggregate_mc(pd.concat(frames, ignore_index=True), ["lambda", "operator"], ["v_k", "efficiency"])
 
 
-def run_algorithmic_firewall_mc(
+def run_predictive_overconfidence_mc(
     n_trials: int = N_MC_TRIALS, seed_base: int = MC_SEED_BASE
 ) -> pd.DataFrame:
     frames = []
     for trial in range(n_trials):
-        trial_df = run_algorithmic_firewall_experiment(np.random.default_rng(seed_base + trial))
+        trial_df = run_predictive_overconfidence_experiment(np.random.default_rng(seed_base + trial))
         trial_df["trial"] = trial
         frames.append(trial_df)
     return _aggregate_mc(pd.concat(frames, ignore_index=True), ["mu_shift", "operator"], ["v_k"])
@@ -175,7 +176,7 @@ def run_all_systemic_experiments_mc(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     return (
         run_opportunity_cost_mc(n_trials, seed_base),
-        run_algorithmic_firewall_mc(n_trials, seed_base),
+        run_predictive_overconfidence_mc(n_trials, seed_base),
         run_noise_propagation_mc(n_trials, seed_base),
     )
 
@@ -184,6 +185,6 @@ def run_all_systemic_experiments() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataF
     rng = np.random.default_rng(SEED)
     return (
         run_opportunity_cost_experiment(rng),
-        run_algorithmic_firewall_experiment(np.random.default_rng(SEED + 1)),
+        run_predictive_overconfidence_experiment(np.random.default_rng(SEED + 1)),
         run_noise_propagation_experiment(np.random.default_rng(SEED + 2)),
     )

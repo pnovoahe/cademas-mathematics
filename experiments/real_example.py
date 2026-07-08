@@ -42,7 +42,7 @@ BASELINE_KEY = "linear_05"
 
 
 def load_attrition_scores(path: Path | None = None) -> pd.DataFrame:
-    """Load cooperative risk R and fuzzy context Q from the final cohort CSV."""
+    """Load predictive score R and fuzzy context Q from the final cohort CSV."""
     path = path or FINAL_CSV
     df = pd.read_csv(path, sep=";")
     df = df.rename(
@@ -165,7 +165,7 @@ def summarize_example() -> pd.DataFrame:
 def print_summary(df: pd.DataFrame, k: int = TOP_K) -> None:
     stats = describe_cohort()
     print(f"Attrition real example (n={len(df)}, Top-K={k})")
-    print(f"  Linear lambda: {LAMBDA_LOW} (context), {LAMBDA} (baseline), {LAMBDA_HIGH} (risk)")
+    print(f"  Linear lambda: {LAMBDA_LOW} (context), {LAMBDA} (baseline), {LAMBDA_HIGH} (predictive)")
     print(f"  Attrition: {stats['attrition']}")
     print(f"  Departments: {stats['departments']}")
     print(f"  R range: [{stats['r_min']:.4f}, {stats['r_max']:.4f}]")

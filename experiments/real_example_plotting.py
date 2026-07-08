@@ -226,7 +226,7 @@ def _case_colors(case_ids: list[str]) -> dict[str, str]:
 
 
 def _union_styles(df: pd.DataFrame) -> tuple[list[str], dict[str, str]]:
-    """Shared Top-K union cases and colors (aligned with risk vs. contextt plane)."""
+    """Shared Top-K union cases and colors (aligned with predictive score vs. context plane)."""
     union_ids = top_k_union(df, k=TOP_K)
     return union_ids, _case_colors(union_ids)
 
@@ -413,7 +413,7 @@ def plot_risk_context_plane(
     baseline_colors: dict[str, str] | None = None,
     ghost_ids: list[str] | None = None,
 ) -> Path:
-    """Scatter of cooperative risk vs context score for the full cohort."""
+    """Scatter of predictive score vs context score for the full cohort."""
     apply_helvetica_style(font_scale=PLOT_FONT_SCALE)
     text_size = plt.rcParams["ytick.labelsize"]
     label_size = text_size * BUMP_ANNOT_FONT_SCALE
@@ -498,8 +498,8 @@ def plot_risk_context_plane(
         )
 
     ax.set_xlabel(r"Context score $Q_i$ (Digital Transformation)")
-    ax.set_ylabel(r"Cooperative risk $R_i$")
-    ax.set_title("Risk vs. Contextt plane", fontweight="bold")
+    ax.set_ylabel(r"Predictive score $R_i$")
+    ax.set_title("Predictive score vs. context plane", fontweight="bold")
     ax.set_xlim(-0.02, x_max)
     ax.set_ylim(-0.02, PLANE_Y_TOP)
     ax.yaxis.set_major_locator(FixedLocator(_plane_yticks()))

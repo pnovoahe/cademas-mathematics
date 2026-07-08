@@ -16,7 +16,7 @@ OPP_LAMBDA_MAX = 0.95
 OPP_LAMBDA_POINTS = 19
 
 # Exp 2: lambda=0.5 caps veto P at 0.5 while std reach 1.0; 0.85 exposes linear failure.
-FIREWALL_LAMBDA = 0.85
+PREDICTIVE_OVERCONFIDENCE_LAMBDA = 0.85
 
 # Exp 3: lower lambda weights Q more, amplifying linear sensitivity to Q noise.
 NOISE_LAMBDA = 0.35
@@ -30,7 +30,7 @@ NOISE_SIGMA_MIN = 0.0
 NOISE_SIGMA_MAX = 0.5
 NOISE_SIGMA_POINTS = 21
 
-FIGURES_DIR = Path(__file__).resolve().parents[1] / "paper" / "figures"
+FIGURES_DIR = Path(__file__).resolve().parents[1] / "paper_final" / "figures"
 
 # Figure dimensions (inches); aspect ratio preserved vs. original layout
 FIG_SCALE = 0.85

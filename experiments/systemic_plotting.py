@@ -59,14 +59,14 @@ def plot_opportunity_cost(df: pd.DataFrame, output_path: Path | None = None) -> 
 
     ax_v.set_xlabel(r"Trade-off parameter $\lambda$")
     ax_v.set_ylabel(r"Policy Violation Rate $V_K$")
-    ax_v.set_title("(a) Institutional compliance", fontweight="bold")
+    ax_v.set_title("(a)", fontweight="bold")
     ax_v.set_xlim(0.0, 1.0)
     v_k_max = df["v_k_ci_high"].max()
     ax_v.set_ylim(-0.005, max(0.24, v_k_max * 1.08))
 
     ax_e.set_xlabel(r"Trade-off parameter $\lambda$")
     ax_e.set_ylabel(r"Predictive Efficiency ($\overline{R}_{\mathrm{std}} \in \mathrm{Top}\text{-}K$)")
-    ax_e.set_title("(b) Predictive utility", fontweight="bold")
+    ax_e.set_title("(b)", fontweight="bold")
     eff_min = df["efficiency_ci_low"].min()
     eff_max = df["efficiency_ci_high"].max()
     eff_pad = (eff_max - eff_min) * 0.08
@@ -86,7 +86,7 @@ def plot_opportunity_cost(df: pd.DataFrame, output_path: Path | None = None) -> 
     return out
 
 
-def plot_algorithmic_firewall(
+def plot_predictive_overconfidence(
     df: pd.DataFrame, output_path: Path | None = None, lam: float = 0.5
 ) -> Path:
     """V_K vs local ML overconfidence on veto group."""
@@ -100,14 +100,14 @@ def plot_algorithmic_firewall(
 
     ax.set_xlabel(r"Local ML Overconfidence ($\mu_{\mathrm{shift}}$ on veto group)")
     ax.set_ylabel(r"Policy Violation Rate $V_K$")
-    ax.set_title(rf"Algorithmic Firewall ($\lambda = {lam:.2f}$)", fontweight="bold")
+    ax.set_title(rf"Predictive Overconfidence ($\lambda = {lam:.2f}$)", fontweight="bold")
     ax.set_xlim(0.48, 1.02)
     ax.set_ylim(-0.01, max(0.35, df["v_k_ci_high"].max() * 1.15))
     ax.legend(loc="upper left", **LEGEND_KW)
     style_axes_frame(ax)
     fig.tight_layout()
 
-    out = output_path or (_fig_dir() / "algorithmic_firewall.pdf")
+    out = output_path or (_fig_dir() / "predictive_overconfidence.pdf")
     fig.savefig(out)
     plt.close(fig)
     return out

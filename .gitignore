@@ -243,9 +243,14 @@ __marimo__/
 *.figlist
 *.makefile
 *-converted-to.*
-!paper/Definitions/*-converted-to.*
+!paper_final/Definitions/*-converted-to.*
 missfont.log
 
 # Matplotlib cache (experiments)
 .mplconfig/
 experiments/.mplconfig/
+
+# Superseded paper drafts and review artifacts (kept locally in old/)
+old/
+paper/
+paper_v2/
