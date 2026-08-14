@@ -250,6 +250,9 @@ missfont.log
 .mplconfig/
 experiments/.mplconfig/
 
+# Monte Carlo aggregated summaries (regenerate with --refresh)
+experiments/.cache/
+
 # Superseded paper drafts and review artifacts (kept locally in old/)
 old/
 paper/

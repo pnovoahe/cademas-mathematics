@@ -29,8 +29,10 @@ from real_example import (
 )
 from systemic_config import FIGURES_DIR, PLOT_FONT_SCALE, SINGLE_PANEL_FIGSIZE
 
-PLANE_SIDE = SINGLE_PANEL_FIGSIZE[1] * 1.5
+# Larger canvas, same font/marker sizes: more space between points without scaling labels.
+PLANE_SIDE = SINGLE_PANEL_FIGSIZE[1] * 2.2
 PLANE_FIGSIZE = (PLANE_SIDE, PLANE_SIDE)
+PLANE_FONT_SCALE = PLOT_FONT_SCALE * 1.12
 BUMP_FIGSIZE = (SINGLE_PANEL_FIGSIZE[0] * 1.5, SINGLE_PANEL_FIGSIZE[1] * 2.5)
 BUMP_X_MARGIN_LEFT = 1.0
 BUMP_X_MARGIN_RIGHT = 0.25
@@ -221,8 +223,9 @@ def _plot_baseline_ghost_markers(
 
 
 def _case_colors(case_ids: list[str]) -> dict[str, str]:
-    cmap = plt.get_cmap("tab20")
-    return {cid: cmap(i % 20) for i, cid in enumerate(case_ids)}
+    from plot_style import OKABE_ITO
+
+    return {cid: OKABE_ITO[i % len(OKABE_ITO)] for i, cid in enumerate(case_ids)}
 
 
 def _union_styles(df: pd.DataFrame) -> tuple[list[str], dict[str, str]]:
@@ -414,7 +417,7 @@ def plot_risk_context_plane(
     ghost_ids: list[str] | None = None,
 ) -> Path:
     """Scatter of predictive score vs context score for the full cohort."""
-    apply_helvetica_style(font_scale=PLOT_FONT_SCALE)
+    apply_helvetica_style(font_scale=PLANE_FONT_SCALE)
     text_size = plt.rcParams["ytick.labelsize"]
     label_size = text_size * BUMP_ANNOT_FONT_SCALE
     fig, ax = plt.subplots(figsize=PLANE_FIGSIZE)
@@ -651,23 +654,59 @@ def plot_real_example(df: pd.DataFrame) -> tuple[Path, Path]:
     return plane, bump
 
 
+def _format_p_cell(p: float, in_top_k: bool, is_baseline_row: bool) -> str:
+    """Format aggregated score with Top-K membership marker."""
+    value = f"{p:.4f}"
+    if is_baseline_row:
+        if in_top_k:
+            return value
+        return f"\\textbf{{{value}}}"
+    if in_top_k:
+        return f"\\textbf{{\\textit{{{value}}}}}"
+    return value
+
+
 def results_table_latex(df: pd.DataFrame, k: int = TOP_K) -> str:
-    """Generate LaTeX tabular rows for baseline Top-K plus ghost entrants."""
+    """Generate LaTeX tabular rows for baseline Top-K plus alternative entrants."""
     baseline_ids = _baseline_top_k_ids(df)
-    ghost_ids = set(_ghost_case_ids(df, baseline_ids))
-    union_ids = top_k_union(df, k=k)
-    score_cols = [f"P_{key}" for key in OPERATORS]
-    rank_cols = [f"rank_{key}" for key in OPERATORS]
-    cols = ["case_id", "R", "Q", "attrition"] + score_cols + rank_cols
-    lines = []
-    for cid in union_ids:
+    baseline_set = set(baseline_ids)
+    ghost_ids = [cid for cid in top_k_union(df, k=k) if cid not in baseline_set]
+    cols = ["case_id", "R", "Q", "attrition"] + [f"P_{key}" for key in OPERATORS] + [
+        f"rank_{key}" for key in OPERATORS
+    ]
+
+    def _row_cells(cid: str, is_baseline_row: bool) -> str:
         row = df.loc[df["case_id"] == cid, cols].iloc[0]
-        name = row["case_id"]
         attr = "Yes" if str(row["attrition"]).lower() in ("yes", "true", "1") else "No"
-        ghost = "Yes" if name in ghost_ids else "No"
-        scores = " & ".join(f"{row[f'P_{key}']:.4f}" for key in OPERATORS)
-        ranks = " & ".join(str(int(row[f"rank_{key}"])) for key in OPERATORS)
-        lines.append(
-            f"{name} & {row['R']:.4f} & {row['Q']:.4f} & {scores} & {ranks} & {ghost} & {attr} \\\\"
+        scores = " & ".join(
+            _format_p_cell(
+                float(row[f"P_{key}"]),
+                int(row[f"rank_{key}"]) <= k,
+                is_baseline_row,
+            )
+            for key in OPERATORS
         )
+        return (
+            f"{row['case_id']} & {row['R']:.4f} & {row['Q']:.4f} & {scores} & {attr}"
+        )
+
+    lines: list[str] = []
+    for i, cid in enumerate(baseline_ids):
+        prefix = (
+            r"\multirow[m]{10}{*}{\shortstack{Baseline Top-$K$\\($A_L$, $\lambda=0.5$)}} & "
+            if i == 0
+            else "& "
+        )
+        lines.append(f"{prefix}{_row_cells(cid, True)} \\\\")
+
+    lines.append(r"\midrule")
+
+    for i, cid in enumerate(ghost_ids):
+        prefix = (
+            r"\multirow[m]{10}{*}{\shortstack{Top-$K$ entrants under\\alternative operators}} & "
+            if i == 0
+            else "& "
+        )
+        lines.append(f"{prefix}{_row_cells(cid, False)} \\\\")
+
     return "\n".join(lines)

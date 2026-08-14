@@ -1,70 +1,99 @@
-"""Shared operator colors, markers, and line styles for all CADEMAS figures."""
+"""Publication plotting style (Okabe–Ito; CADEMAS operator series)."""
 
-import matplotlib.colors as mcolors
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
-import seaborn as sns
+from matplotlib.font_manager import FontProperties
 
-HELVETICA = "Helvetica"
+OKABE_ITO = [
+    "#E69F00",
+    "#56B4E9",
+    "#009E73",
+    "#F0E442",
+    "#0072B2",
+    "#D55E00",
+    "#CC79A7",
+    "#000000",
+]
 
-# Panel background: lighter than seaborn paper (#EAEAF2), with white grid stripes on top.
-PANEL_FACECOLOR = "#F3F3F6"
-FIGURE_FACECOLOR = "white"
-
-# Magma sequential samples, spaced and away from palette extremes (t ≈ 0.1 / 0.9)
-MAGMA_OPERATOR_STOPS = {
-    "linear": 0.28,
-    "min": 0.52,
-    "geometric": 0.76,
-    "max": 0.40,
+# Operator → Okabe–Ito mapping (colorblind-safe, distinct on print).
+OPERATOR_COLORS = {
+    "linear": OKABE_ITO[4],  # #0072B2
+    "geometric": OKABE_ITO[5],  # #D55E00
+    "min": OKABE_ITO[2],  # #009E73
+    "max": OKABE_ITO[0],  # #E69F00
 }
 
-
-def _magma_hex(t: float) -> str:
-    rgba = plt.get_cmap("magma")(t)
-    return mcolors.to_hex(rgba[:3])
+PANEL_LETTER_FP = FontProperties(family="Helvetica", weight="bold", size=12)
 
 
-OPERATOR_COLORS = {op: _magma_hex(t) for op, t in MAGMA_OPERATOR_STOPS.items()}
-
-
-def apply_helvetica_style(font_scale: float = 1.1, **overrides) -> None:
-    """Configure matplotlib/seaborn to use Helvetica for all text, including mathtext."""
-    sns.set_theme(context="paper", font_scale=font_scale)
+def apply_paper_style(font_size: int = 11) -> None:
+    """Publication defaults: Helvetica/Arial, white faces, no top/right spines."""
     plt.rcParams.update(
         {
             "font.family": "sans-serif",
-            "font.sans-serif": [HELVETICA, "Arial", "DejaVu Sans", "sans-serif"],
-            "mathtext.fontset": "custom",
-            "mathtext.rm": HELVETICA,
-            "mathtext.it": "Helvetica Oblique",
-            "mathtext.bf": "Helvetica Bold",
-            "mathtext.sf": HELVETICA,
-            "mathtext.tt": HELVETICA,
-            "font.size": 11,
-            "axes.labelsize": 12,
-            "axes.titlesize": 12,
-            "legend.fontsize": 9,
-            "xtick.labelsize": 10,
-            "ytick.labelsize": 10,
+            "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
+            "font.size": font_size,
+            "axes.labelsize": font_size,
+            "axes.titlesize": font_size + 1,
+            "legend.fontsize": font_size - 1,
+            "xtick.labelsize": font_size - 1,
+            "ytick.labelsize": font_size - 1,
+            "figure.facecolor": "white",
+            "axes.facecolor": "white",
+            "savefig.facecolor": "white",
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.grid": False,
+            "pdf.fonttype": 42,
             "savefig.format": "pdf",
             "savefig.bbox": "tight",
             "savefig.dpi": 300,
-            "axes.edgecolor": "black",
-            "axes.linewidth": 1.0,
-            "axes.facecolor": PANEL_FACECOLOR,
-            "figure.facecolor": FIGURE_FACECOLOR,
-            "savefig.facecolor": FIGURE_FACECOLOR,
-            "axes.grid": True,
-            "grid.color": "white",
-            **overrides,
+            "mathtext.fontset": "custom",
+            "mathtext.rm": "Helvetica",
+            "mathtext.it": "Helvetica Oblique",
+            "mathtext.bf": "Helvetica Bold",
+            "mathtext.sf": "Helvetica",
+            "mathtext.tt": "Helvetica",
         }
     )
 
 
+def apply_helvetica_style(font_scale: float = 1.1, **overrides) -> None:
+    """Compatibility wrapper used by existing plotting modules."""
+    base = 11
+    apply_paper_style(font_size=max(9, int(round(base * font_scale / 1.1))))
+    if overrides:
+        plt.rcParams.update(overrides)
+
+
+def add_panel_letter(ax, letter: str, *, x: float = 0.02, y: float = 1.02) -> None:
+    """Panel tag, e.g. (a), above the axes (Helvetica bold)."""
+    ax.text(
+        x,
+        y,
+        f"({letter})",
+        transform=ax.transAxes,
+        fontproperties=PANEL_LETTER_FP,
+        va="bottom",
+        ha="left",
+        clip_on=False,
+    )
+
+
+def add_panel_header(ax, letter: str, label: str) -> None:
+    """Bold panel letter above axes; centered title."""
+    add_panel_letter(ax, letter)
+    ax.set_title(label, fontsize=9.5, pad=4)
+
+
 def style_axes_frame(ax) -> None:
-    """Ensure a visible black border on all four spines and a light panel background."""
-    ax.set_facecolor(PANEL_FACECOLOR)
-    for spine in ax.spines.values():
+    """White panel, visible left/bottom spines, hidden top/right."""
+    ax.set_facecolor("white")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    for spine_name in ("left", "bottom"):
+        spine = ax.spines[spine_name]
         spine.set_visible(True)
         spine.set_edgecolor("black")
         spine.set_linewidth(1.0)
@@ -72,28 +101,25 @@ def style_axes_frame(ax) -> None:
 
 OPERATOR_STYLE = {
     "linear": {
-        "color": "#3D82C5",
+        "color": OPERATOR_COLORS["linear"],
         "marker": "v",
         "markersize": 8,
-        #"markerfacecolor": "white",
-        #"markeredgecolor": "#C31F5C",
-        #"markeredgewidth": 2,
         "linestyle": "-",
-        "linewidth": 3,
+        "linewidth": 2.5,
     },
     "min": {
-        "color": "#FBB216",
+        "color": OPERATOR_COLORS["min"],
         "marker": "s",
         "markersize": 6,
         "linestyle": "-",
-        "linewidth": 2,
+        "linewidth": 2.0,
     },
     "geometric": {
-        "color": "#C31F5C",
+        "color": OPERATOR_COLORS["geometric"],
         "marker": "o",
-        "markersize": 4,
+        "markersize": 5,
         "linestyle": "-",
-        "linewidth": 1,
+        "linewidth": 2.0,
     },
     "max": {
         "color": OPERATOR_COLORS["max"],
@@ -107,8 +133,7 @@ OPERATOR_STYLE = {
 
 def plot_kwargs(operator: str, **overrides) -> dict:
     """Return matplotlib plot kwargs for a given operator."""
-    style = {**OPERATOR_STYLE[operator], **overrides}
-    return style
+    return {**OPERATOR_STYLE[operator], **overrides}
 
 
 def plot_operator(ax, x, y, operator: str, label: str | None = None, **overrides):
@@ -117,17 +142,6 @@ def plot_operator(ax, x, y, operator: str, label: str | None = None, **overrides
     marker = style.pop("marker")
     linestyle = style.pop("linestyle")
     return ax.plot(x, y, f"{marker}{linestyle}", label=label, **style)
-
-
-def _ci_bounds(series) -> tuple[float, float, float]:
-    import numpy as np
-
-    values = np.asarray(series, dtype=float)
-    return (
-        float(np.mean(values)),
-        float(np.percentile(values, 2.5)),
-        float(np.percentile(values, 97.5)),
-    )
 
 
 def _series_color(operator: str) -> str:

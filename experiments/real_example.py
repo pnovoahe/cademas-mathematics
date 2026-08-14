@@ -32,8 +32,8 @@ OPERATOR_LABELS = {
     "linear_01": r"$A_L$ ($\lambda=0.1$)",
     "linear_05": r"$A_L$ ($\lambda=0.5$)",
     "linear_90": r"$A_L$ ($\lambda=0.9$)",
-    "min_05": r"$A_T^{\min}$",
-    "geometric_05": r"$A_G$",
+    "min_05": r"$A_C^{\min}$",
+    "geometric_05": r"$A_G$ ($\lambda=0.5$)",
 }
 # Bump chart tracks: aggregation operators only.
 BUMP_TRACKS = OPERATORS
