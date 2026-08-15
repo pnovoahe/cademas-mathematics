@@ -1,0 +1,720 @@
+%  LaTeX support: latex@mdpi.com
+%  manuscriptR1V1.tex: Round-1 revision rewrite (skeleton only).
+%  Based on the MDPI Mathematics template from first_round/.
+
+%=================================================================
+\documentclass[mathematics,article,submit,moreauthors]{Definitions/mdpi}
+
+%=================================================================
+% MDPI internal commands - do not modify
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026}
+%\externaleditor{Firstname Lastname}
+\datereceived{ }
+\daterevised{ }
+\dateaccepted{ }
+\datepublished{ }
+
+%=================================================================
+\usepackage{xcolor}
+
+%=================================================================
+% Full title of the paper (Capitalized)
+
+\Title{Aggregation Semantics for Prioritization in Cooperative Automated Decision Making}
+
+% Author Orchid ID: enter ID or remove command
+\newcommand{\orcidauthorA}{0000-0003-3267-6753}
+\newcommand{\orcidauthorB}{0009-0002-0183-7905}
+\newcommand{\orcidauthorC}{0000-0002-7653-1452}
+
+% Authors, for the paper (add full first names)
+\Author{Pavel Novoa-Hern\'andez$^{1,*}$\orcidA{}, Mariia Godz$^{2}$\orcidA{} and David A. Pelta$^{2}$\orcidC{}}
+
+% MDPI internal command: Authors, for metadata in PDF
+\AuthorNames{Pavel Novoa-Hern\'andez, Mariia Godz and David A. Pelta}
+
+% Affiliations / Addresses
+\address{%
+$^{1}$ \quad Dept. Computer Engineering and Systems, Universidad de La Laguna; pnovoahe@ull.edu.es\\
+$^{2}$ \quad Dept. Computer Science and Artificial Intelligence, Universidad de Granada; \{mariiagodz,dpelta\}@ugr.es}
+
+% Contact information of the corresponding author
+\corres{Correspondence: pnovoahe@ull.edu.es}
+
+% Abstract placeholder (to be rewritten with the new structure)
+\abstract{To be rewritten.}
+
+% Keywords
+\keyword{
+cooperative automated decision making;
+aggregation operators;
+multi-criteria decision making;
+context-aware decision support;
+prioritization
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+% ==============================================================================
+% NOTA GLOBAL DE ESTILO:
+% [Aborda 2.8 y M1.7]: Todo el documento debe ser reescrito en tercera persona
+% (evitar "We provide", "We compare") y con una revisi\'on exhaustiva de ingl\'es.
+% ==============================================================================
+
+\section{Introduction}
+% [Aborda 1.1 y 2.2]: Explicar claramente la novedad. No estamos inventando
+% nuevos operadores, sino analizando su sem\'antica en el contexto de CADEMAS.
+% [Aborda 2.3]: Formulaci\'on expl\'icita de las Research Questions (RQs).
+
+\section{Background and Related Work}
+% [Aborda 1.1 y 2.2]: Distinguir nuestra contribuci\'on del MCDM tradicional y la l\'ogica difusa.
+% [Aborda 2.3]: A\~nadir art\'iculos recientes sobre sistemas de decisi\'on sensibles al contexto.
+% [Aborda 2.4]: Incluir una tabla cronol\'ogica al final de la secci\'on resumiendo
+% la literatura y marcando el hueco que llena nuestro paper.
+
+
+This section provides the conceptual foundations required for the remainder
+of the paper. We first review the literature on context-aware decision
+support systems and aggregation operators, highlighting the gap between
+the representation of contextual knowledge and the analysis of the
+aggregation mechanisms used to combine contextual and predictive
+information. We then introduce the Cooperative Automated Decision-Making
+System (CADEMAS) framework and its machine-learning instantiation
+(CADEMAS-ML), which provide the architectural setting in which the
+aggregation strategies studied in this work are analyzed.
+
+\subsection{Related Work}
+\label{subsec:related-work}
+
+Research on cooperative and context-aware decision support has established
+multiple mechanisms for incorporating human knowledge into data-driven
+systems. These include symbolic rules, ontologies, clinical pathways,
+and human-centred interaction principles. For example, Teng and
+Tan~\cite{TengTan2008} proposed cognitive agents that combine
+propositional rules with reinforcement learning to support context-aware
+decision making. In the clinical domain, Yao and
+Kumar~\cite{YaoKumar2012} employed ontologies to identify
+context-appropriate rules and instantiate clinical-pathway fragments for
+individual patients. More recently, Cronholm and
+G\"obel~\cite{CronholmGoebel2022} argued that effective decision support
+requires combining human and artificial intelligence through appropriate
+interaction and governance mechanisms rather than relying solely on
+predictive performance. Complementing these studies, the survey of
+Merkert et~al.~\cite{MerkertEtAl2015} found that the usefulness of
+machine learning in decision support depends strongly on the decision
+task, process stage, and organizational context, while human and
+organizational evaluation criteria remain comparatively underexplored.
+
+Collectively, these works demonstrate the importance of contextual
+knowledge in decision support systems. However, their primary focus is
+typically on knowledge representation, architecture design, rule
+selection, or human--AI interaction. Comparatively less attention has
+been paid to the numerical integration step that combines predictive
+evidence with contextual assessments once both sources of information are
+available. As a result, simple weighted averages are often adopted as a
+convenient integration mechanism, even though their compensatory
+semantics may allow strong predictive evidence to offset weak contextual
+support. While contextual rules can impose constraints upstream, this
+does not necessarily guarantee that such constraints are preserved after
+score fusion.
+
+The aggregation literature provides the mathematical foundations for
+analyzing this issue. Among the most influential contributions, Yager's
+ordered weighted averaging (OWA) operator~\cite{Yager1988} introduced a
+family of aggregation functions capable of representing different
+degrees of conjunctive and disjunctive behaviour through ordered
+weights. Yager~\cite{Yager2005} subsequently extended this framework by
+combining OWA operators with t-norms and relating them to Choquet and
+Sugeno integrals. More broadly, aggregation theory has shown that the
+choice of operator determines the degree of compensation allowed among
+criteria and therefore influences the resulting decision semantics. This
+importance is reflected in the review by Mardani
+et~al.~\cite{Mardani2018}, which identified OWA-based methods as one of
+the most widely used aggregation families in fuzzy MCDM applications.
+Similarly, Csisz\'ar~\cite{Csiszar2021} characterized OWA as a flexible
+parameterized framework spanning numerous well-known operators while
+highlighting the challenge of selecting appropriate aggregation
+behaviour.
+
+A related line of research has investigated aggregation in collective
+decision-making settings. Moral et~al.~\cite{MoralEtAl2017} showed that
+both the aggregation operator and the associated distance measure affect
+the speed and quality of consensus formation. Trillo
+et~al.~\cite{TrilloEtAl2023} further explored customizable aggregation
+mechanisms that allow experts to express different attitudes toward
+criterion importance and consensus requirements. These studies provide
+valuable insights into compensation, consensus, and preference
+aggregation. Nevertheless, their focus remains on combining preferences
+or judgments from multiple decision makers rather than integrating
+predictive outputs from machine-learning models with contextual signals
+that encode organizational priorities, regulations, or policy
+constraints.
+
+Consequently, a gap remains between context-aware decision-support
+frameworks and aggregation theory. The former provides mechanisms for
+representing and managing contextual knowledge but rarely examines the
+behavioral implications of alternative aggregation semantics. The latter
+offers a rich collection of aggregation operators and theoretical
+properties but has seldom been studied from the perspective of
+policy-compliant score fusion in cooperative automated decision-making
+architectures. In particular, relatively little attention has been paid
+to questions such as whether contextual assessments can effectively act
+as veto mechanisms, how aggregation semantics influence robustness to
+predictive overconfidence, or how prioritization rankings respond to
+uncertainty in predictive and contextual information. These questions
+motivate the analysis developed in this work. Table~\ref{tab:related-works-comparison}
+summarizes representative contributions along these dimensions and
+highlights the gap addressed here.
+
+\begin{table}[t]
+\caption{Chronological comparison of representative related work. ``Partially'' indicates that a contribution can encode rules, conjunctive criteria, or minimum thresholds, but does not establish veto preservation for predictive--contextual score fusion.}
+\label{tab:related-works-comparison}
+\renewcommand{\arraystretch}{1.25}\footnotesize
+\begin{adjustwidth}{-\extralength}{0cm}
+\begin{tabularx}{\fulllength}{>{\raggedright\arraybackslash}p{2.6cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|C|C}
+\toprule
+\textbf{Reference} & \textbf{Application / Framework} & \textbf{Aggregation method} & \textbf{Strict contextual veto} & \textbf{Operator robustness} \\
+\midrule
+Yager~\cite{Yager2005} (2005) &
+Multicriteria decision making &
+TOWA (t-norm--OWA); Choquet and Sugeno extensions &
+Partially & Partially \\
+\midrule
+Teng and Tan~\cite{TengTan2008} (2008) &
+Context-aware DSS via cognitive agents &
+Symbolic rules with reinforcement learning; scalar fusion not specified &
+Partially & No \\
+\midrule
+Yao and Kumar~\cite{YaoKumar2012} (2012) &
+Ontology-based clinical DSS &
+Context-driven rule / pathway selection; scalar fusion not specified &
+Partially & No \\
+\midrule
+Merkert et~al.~\cite{MerkertEtAl2015} (2015) &
+Survey of ML in DSS &
+Not a specific aggregation operator &
+No & No \\
+\midrule
+Moral et~al.~\cite{MoralEtAl2017} (2017) &
+Group decision making and consensus &
+Aggregation operators combined with distance functions &
+No & Partially \\
+\midrule
+Mardani et~al.~\cite{Mardani2018} (2018) &
+Review of fuzzy MCDM &
+Reviews OWA and related fuzzy aggregation families &
+No & No \\
+\midrule
+Csisz\'ar~\cite{Csiszar2021} (2021) &
+OWA theory and applications &
+Parameterized OWA family; weight selection &
+Partially & Partially \\
+\midrule
+Cronholm and G\"obel~\cite{CronholmGoebel2022} (2022) &
+Human-centred AI decision support &
+Human--AI design principles; scalar fusion not specified &
+No & No \\
+\midrule
+Trillo et~al.~\cite{TrilloEtAl2023} (2023) &
+Consensus-based multicriteria GDM &
+Expert-customized operator; per-criterion minimum consensus &
+Partially & No \\
+\midrule
+\textbf{Present work} &
+\textbf{Cooperative ADM (CADEMAS)} &
+\textbf{Comparative linear, geometric, and minimum fusion of predictive and contextual scores} &
+\textbf{Yes} & \textbf{Yes} \\
+\bottomrule
+\end{tabularx}
+\end{adjustwidth}
+\end{table}
+
+% [Aborda 1.1 y 2.2]: Distinguir nuestra contribuci\'on del MCDM tradicional y la l\'ogica difusa.
+Unlike traditional fuzzy MCDM studies, the objective of this work is not
+to propose a new aggregation operator, derive additional algebraic
+properties, or solve a specific multicriteria decision problem through a
+particular aggregation scheme. Instead, aggregation operators are treated
+as alternative policy semantics within a cooperative automated
+decision-making architecture. Likewise, unlike many context-aware DSS
+frameworks, the focus is not on representing contextual knowledge itself
+but on understanding how different integration mechanisms affect the
+interaction between predictive evidence and contextual constraints.
+Consequently, the contribution of this work lies at the architectural and
+methodological level, namely, the systematic analysis of aggregation as a
+governance mechanism within CADEMAS-ML.
+
+\subsection{CADEMAS and CADEMAS-ML}
+\label{sect:cademas}
+
+The literature reviewed in the previous section shows that many
+context-aware decision-support systems focus on representing contextual
+knowledge through rules, ontologies, policies, or human expertise.
+However, comparatively less attention has been paid to the integration
+mechanism that combines contextual assessments with predictive evidence.
+The CADEMAS framework introduced by \citet{NovoaHernandez2026} provides
+a suitable setting for studying this issue because it explicitly
+separates evidence generation from contextual evaluation and decision
+integration.
+
+CADEMAS is a general framework for designing cooperative automated
+decision-making systems in which multiple heterogeneous Automated
+Decision-Making (ADM) units collaborate to produce a unified
+recommendation, score, or label. The framework is intentionally agnostic
+with respect to the internal implementation of these units. An ADM may
+correspond to a machine-learning model, a rule-based system, an
+optimization algorithm, an expert system, or any other computational
+mechanism capable of generating decision evidence. Likewise, contextual
+knowledge may be represented through expert rules, organizational
+policies, regulatory requirements, or other knowledge-representation
+formalisms.
+
+Rather than prescribing how individual decisions are produced, CADEMAS
+defines an architectural process through which heterogeneous decision
+signals are coordinated and subsequently evaluated against contextual
+considerations before a final recommendation is generated.
+
+Formally, a CADEMAS instance is represented by
+\begin{equation}
+\mathcal{S}=
+\langle I, U, O, K, T \rangle,
+\end{equation}
+where $I$ denotes the Input Manager, $U$ the set of ADM units, $O$ the
+Decision Integration Layer, $K$ the Contextual Modulator, and $T$ the
+universe of admissible data representations.
+
+The resulting architecture follows a layered decision process. First,
+the ADM units independently generate decision evidence from the
+available information. Different units may operate on different subsets
+of the input data and employ different reasoning mechanisms. In
+parallel, the Contextual Modulator evaluates the same decision case from
+the perspective of organizational priorities, domain knowledge,
+regulatory requirements, or other contextual considerations, producing a
+degree of contextual satisfaction. Finally, the Decision Integration
+Layer combines both sources of information into a unified decision
+output.
+
+This explicit separation between predictive assessment, contextual
+evaluation, and decision integration is one of the defining
+characteristics of CADEMAS. It allows the same architecture to be
+instantiated across different domains while making the integration
+mechanism itself an independent design component.
+
+A particularly relevant specialization is CADEMAS-ML, in which the ADM
+units correspond to machine-learning models. In this case, the
+predictive subsystem resembles a cooperative ensemble in which multiple
+models contribute to a unified predictive assessment. Unlike
+conventional ensemble methods, however, CADEMAS-ML separates predictive
+cooperation from contextual evaluation. Predictive outputs are first
+consolidated into a common predictive score and only afterwards combined
+with contextual knowledge that encodes organizational or institutional
+priorities. Following previous CADEMAS-ML implementations
+\citep{PerezCanedo2022,PerezCanedo2024,Godz2026}, contextual knowledge
+is represented through an interpretable fuzzy inference system.
+
+To focus on the role of aggregation independently of any specific
+application domain, we abstract the predictive subsystem by a normalized
+predictive score
+\begin{equation}
+R_i \in [0,1],
+\end{equation}
+which summarizes the evidence generated by the cooperating ADM units for
+decision case $i$. Depending on the application, $R_i$ may represent a
+risk estimate, a confidence score, a probability of occurrence, or any
+other normalized predictive assessment.
+
+Independently, the contextual subsystem produces a normalized context
+score
+\begin{equation}
+Q_i \in [0,1],
+\end{equation}
+which measures the extent to which decision case $i$ satisfies the
+relevant contextual requirements, policies, or priorities.
+
+The predictive and contextual assessments are then combined through an
+aggregation operator $A$
+\begin{equation}
+P_i = A(R_i,Q_i),
+\end{equation}
+yielding the final prioritization score. The resulting scores are used
+to rank candidate cases and determine the corresponding Top-$K$
+alternatives.
+
+Existing CADEMAS-ML applications employ a linear convex aggregation rule
+to combine predictive and contextual information. However, the CADEMAS
+framework itself does not prescribe any specific aggregation semantics
+\citep{NovoaHernandez2026}. Consequently, the aggregation operator can
+be regarded as an independent policy-design component that determines
+how predictive evidence and contextual considerations interact. This
+property makes CADEMAS-ML an appropriate testbed for investigating how
+alternative aggregation semantics influence prioritization behavior,
+policy compliance, robustness, and ranking stability while preserving
+the same predictive and contextual subsystems.
+
+
+\section{Theoretical Framework and Aggregation Properties}
+% Esta secci\'on sube el rigor matem\'atico y generaliza los resultados.
+
+\subsection{Preliminaries and Assumptions}
+% [Aborda 2.5 y 1.5]: Declarar la universalidad. Definir el dominio [0,1],
+% y explicar qu\'e ocurre si no est\'an normalizados. Quitar "normalizaci\'on" como
+% propiedad y formalizar conmutatividad e idempotencia.
+% [Aborda M1.1 y M1.2]: Aclarar terminolog\'ia (t-norma vs operador agregador) y unificar notaci\'on.
+% [Aborda 1.2]: Antiguo Teorema 2 se convierte en el Lema 1 (Monotonicidad y Fronteras).
+
+% [Aborda 2.5]: Universalidad y asunciones del dominio.
+Let $R \in [0,1]$ represent the predictive score and $Q \in [0,1]$ represent the contextual score assigned to a given decision alternative. While our analysis assumes these scores are normalized to the unit interval, this assumption does not restrict the universality of our findings. Any bounded continuous scoring domain $[a,b]$ can be isomorphically mapped to $[0,1]$ through standard min-max scaling. Consequently, the theoretical properties and operator behaviors discussed herein hold universally for any bounded decision space.
+
+% [Aborda 1.5 y M1.1]: Corrección de la "normalización" y aclaración de terminología.
+In this framework, the integration of predictive and contextual dimensions is governed by an \textit{aggregation function}. Formally, a bivariate aggregation function is a mapping $A: [0,1]^2 \to [0,1]$ that satisfies the following fundamental axioms:
+\begin{itemize}
+    \item \textit{Boundary conditions:} $A(0,0) = 0$ and $A(1,1) = 1$.
+    \item \textit{Monotonicity:} $A(x_1, y_1) \le A(x_2, y_2)$ whenever $x_1 \le x_2$ and $y_1 \le y_2$.
+\end{itemize}
+
+Depending on the chosen mechanism, additional algebraic properties may be desirable, such as commutativity ($A(x,y) = A(y,x)$) and idempotency ($A(x,x) = x$). It is crucial to distinguish between general aggregation functions and specific mathematical sub-families. For example, while triangular norms (t-norms) such as the standard minimum operator are a specific class of aggregation functions that strictly require commutativity and associativity, not all operators analyzed in cooperative frameworks belong to this class.
+
+% [Aborda 1.2]: El antiguo Teorema 2 rebajado a Lema fundacional.
+Building upon these standard axioms, we establish the following baseline lemma, which governs the structural behavior of any valid aggregation process within our system.
+
+\begin{Lemma}
+    \label{lemma:monotonicity-and-boundary-preservation}
+    \textbf{Lemma 1 (Monotonicity and Boundary Preservation).} \textit{For any candidate evaluated under an aggregation function $A$ satisfying the standard axioms, an isolated improvement in either the predictive score $R$ or the contextual score $Q$ guarantees that the final integrated score will not decrease. Furthermore, the evaluation is strictly bounded such that the presence of a perfect partial score cannot force the aggregation beyond the strict limits of the codomain, meaning $A(R,0) \ge 0$ and $A(R,1) \le 1$ for any $R \in [0,1]$.}
+\end{Lemma}
+
+
+
+\subsection{Choice of Operators and Archetypes}
+% [Aborda 1.12 y 2.6]: Justificar por qu\'e elegimos Lineal, Geom\'etrico y M\'inimo.
+% Explicar que representan los arquetipos de compensaci\'on y por qu\'e descartamos Choquet/OWA emp\'iricamente.
+% [Aborda 1.4]: Especificar que para el geom\'etrico lambda $\in (0,1)$ para evitar $0^0$.
+
+\subsection{Veto Preservation and Compensation Limits}
+% [Aborda 1.2 y 1.3]: Reformular la Proposici\'on 1 para clases m\'as amplias de
+% operadores usando propiedades exactas ($A(x,0)=0$ y $A(x,y)>0$ si $x,y>0$).
+% [Aborda 2.1]: Establecer las condiciones matem\'aticas exactas (Corolario/Proposici\'on)
+% para que ocurra el ``rank reversal'' bajo agregaci\'on lineal.
+
+\subsection{Sensitivity and Robustness to Contextual Imprecision}
+% [Aborda 1.9]: NUEVO TEOREMA 4. Formular el resultado anal\'itico evaluando
+% $|A(R, Q+\varepsilon) - A(R, Q)|$ para justificar la superioridad del operador m\'inimo.
+
+\section{Experimental Evaluation: Monte Carlo Simulations}
+% Separamos las simulaciones del caso de uso real para mayor claridad.
+
+\subsection{Experimental Protocol and Metrics}
+% [Aborda 1.7]: Aumentar $N$ (ej. $N=1000$ en lugar de 30), explicar intervalos
+% de confianza y reportar semillas aleatorias para reproducibilidad.
+% [Aborda 1.11]: Redefinir la m\'etrica de Policy Violation $V_K$ para evitar
+% divisi\'on por cero (e.g., definida a trozos).
+% [Aborda M1.4 y M1.5]: Explicar c\'omo se rompen los empates (tie-breaking) en el
+% operador m\'inimo y aclarar el funcionamiento de argsort (ascendente/descendente).
+
+\subsection{Compensation Effects under Intermediate Contexts}
+% [Aborda 1.6]: Mostrar experimentos donde el contexto NO es cero ($Q > 0$),
+% para ver c\'omo se comportan los operadores en grises.
+% [Aborda M1.3]: Definir formalmente y sin ambig\"uedad qu\'e significa
+% ``predictive overconfidence'' en la simulaci\'on.
+
+\subsection{Robustness to Contextual Uncertainty}
+% [Aborda 1.8 y 2.7]: An\'alisis de Sensibilidad. Evaluar m\'ultiples valores de $\lambda$,
+% diferentes modelos de ruido (no solo uno) y distribuciones de poblaci\'on.
+% *Nota: Aqu\'i referenciamos el nuevo resultado anal\'itico de la Secci\'on 3.4.
+
+\section{Real-World Case Study: Employee Attrition Prioritization}
+% [Aborda 1.10]: Aclarar fuertemente que esto es una ILUSTRACI\'ON basada en
+% scores precomputados de CADEMAS-ML, no una validaci\'on independiente de un modelo predictivo.
+
+\subsection{Dataset Setup and Contextual Vetoes}
+% [Aborda 1.10]: Explicar c\'omo se seleccionaron los empleados y c\'omo
+% se obtuvieron los context scores.
+
+\subsection{Prioritization Results and Top-K Stability}
+% [Aborda 1.10 y 2.7]: Presentar los resultados y mostrar una gr\'afica/tabla
+% de sensibilidad demostrando si las conclusiones se mantienen estables
+% para distintos valores de $K$ (ej. Top-5, Top-10, Top-50).
+
+\section{Discussion and Conclusions}
+% Resumen de los hallazgos.
+% Implicaciones pr\'acticas (la elecci\'on del operador es gobernanza).
+% Trabajo futuro.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\authorcontributions{To be completed.}
+
+\funding{This research was supported by the project ``Study, Analysis and Evaluation of Cooperative Automated Decision-Making Systems (CADEMAS)'', PID2023-146575NB-I00, funded by MCIU/AEI/I0.13039/501100011033 and by FSE+.}
+
+\institutionalreview{Not applicable.}
+
+\informedconsent{Not applicable.}
+
+\dataavailability{To be completed.}
+
+\acknowledgments{Mariia Godz has a pre-doctoral research contract associated with the project ``Study, Analysis and Evaluation of Cooperative Automated Decision-Making Systems (CADEMAS)'', PID2023-146575NB-I00, funded by MCIU/AEI/I0.13039/501100011033 and by FSE+.}
+
+\conflictsofinterest{The authors declare no conflicts of interest.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{adjustwidth}{-\extralength}{0cm}
+\reftitle{References}
+
+\begin{thebibliography}{999}
+    
+    \bibitem[Kierner et~al.(2023)Kierner, Kucharski, and Kierner]{Kierner2023}
+    Kierner, S.; Kucharski, J.; Kierner, Z.
+    \newblock Taxonomy of Hybrid Architectures Involving Rule-Based Reasoning and
+    Machine Learning in Clinical Decision Systems: A Scoping Review.
+    \newblock {\em Journal of Biomedical Informatics} {\bf 2023}, {\em
+        144},~104428.
+    \newblock {\url{https://doi.org/10.1016/j.jbi.2023.104428}}.
+    
+    \bibitem[Rahman et~al.(2025)Rahman, Zainal, Mubarak, Shabir, Anwar, and
+    Asrowardi]{Rahman2025}
+    Rahman, T.; Zainal, D.; Mubarak, H.; Shabir, F.; Anwar, N.; Asrowardi, I.
+    \newblock Utilizing Machine Learning-Based Decision-Making to Align Higher
+    Education Curriculum with Industry Requirements.
+    \newblock {\em International Journal of Modern Education and Computer Science}
+    {\bf 2025}, {\em 17},~1--15.
+    \newblock {\url{https://doi.org/10.5815/ijmecs.2025.04.01}}.
+    
+    \bibitem[Pérez-Domínguez et~al.(2024)Pérez-Domínguez, Callejas-Cuervo, and
+    García-Luna]{PerezDominguez2024}
+    Pérez-Domínguez, L.; Callejas-Cuervo, M.; García-Luna, F.
+    \newblock Intuitionistic Fuzzy Dimensional Analysis in Multi-Criteria
+    Decision-Making: A Computational Approach.
+    \newblock {\em IEEE Access} {\bf 2024}, {\em 12},~1--15.
+    \newblock {\url{https://doi.org/10.1109/ACCESS.2024.3422616}}.
+    
+    \bibitem[Novoa-Hernández et~al.(2026)Novoa-Hernández, Pelta, Godz, Verdegay,
+    and Buendia-Carrillo]{NovoaHernandez2026}
+    Novoa-Hernández, P.; Pelta, D.; Godz, M.; Verdegay, J.; Buendia-Carrillo, D.
+    \newblock {CADEMAS} – A Framework for Cooperative Automated Decision-Making
+    Systems.
+    \newblock In Proceedings of the Proceedings of the 2026 IEEE Conference on
+    Artificial Intelligence (CAI),  2026, pp. 756--761.
+    \newblock {\url{https://doi.org/10.1109/CAI68641.2026.11536392}}.
+    
+    \bibitem[{ELI Innovation Paper}(2022)]{ELI_ADM_Principles_2022}
+    {ELI Innovation Paper}.
+    \newblock Guiding Principles for Automated Decision-Making in the {EU}.
+    \newblock Innovation paper, European Law Institute (ELI),  2022.
+    
+    \bibitem[Godz et~al.(2026)Godz, Novoa-Hernández, and Pelta]{Godz2026}
+    Godz, M.; Novoa-Hernández, P.; Pelta, D.
+    \newblock A Cooperative and Context-Aware Approach for Employee Attrition
+    Prevention. In {\em Information Processing and Management of Uncertainty in
+        Knowledge-Based Systems}; Springer Nature Switzerland,  2026; pp. 203--217.
+    \newblock {\url{https://doi.org/10.1007/978-3-032-29000-7_15}}.
+    
+    \bibitem[Yager(1988)]{Yager1988}
+    Yager, R.
+    \newblock On Ordered Weighted Averaging Aggregation Operators in Multicriteria
+    Decisionmaking.
+    \newblock {\em IEEE Transactions on Systems, Man, and Cybernetics} {\bf 1988},
+    {\em 18},~183--190.
+    \newblock {\url{https://doi.org/10.1109/21.87068}}.
+    
+    \bibitem[Tan and Chen(2010)]{Tan2009}
+    Tan, C.; Chen, X.
+    \newblock Induced Intuitionistic Fuzzy Ordered Weighted Geometric Operator and
+    Its Application to Multiple Attribute Decision Making.
+    \newblock {\em International Journal of Intelligent Systems} {\bf 2010}, {\em
+        25},~1193--1209.
+    \newblock {\url{https://doi.org/10.1002/int.20446}}.
+    
+    \bibitem[Grabisch et~al.(2000)Grabisch, Murofushi, and Sugeno]{Grabisch1996}
+    Grabisch, M.; Murofushi, T.; Sugeno, M.
+    \newblock Aggregation Operators and Fuzzy Integrals. In {\em Fuzzy Measures and
+        Integrals: Theory and Applications}; Physica-Verlag,  2000; pp. 3--41.
+    
+    \bibitem[Riaz et~al.(2022)Riaz, Farid, Wang, and Pamucar]{Riaz2022}
+    Riaz, M.; Farid, H.; Wang, W.; Pamucar, D.
+    \newblock Interval-Valued Linear Diophantine Fuzzy Frank Aggregation Operators
+    with Multi-Criteria Decision-Making.
+    \newblock {\em Mathematics} {\bf 2022}, {\em 10},~1811.
+    \newblock {\url{https://doi.org/10.3390/math10111811}}.
+    
+    \bibitem[Senapati et~al.(2022)Senapati, Chen, and Yager]{Senapati2022}
+    Senapati, T.; Chen, G.; Yager, R.
+    \newblock Aczel--Alsina Aggregation Operators and Their Application to
+    Intuitionistic Fuzzy Multiple Attribute Decision Making.
+    \newblock {\em International Journal of Intelligent Systems} {\bf 2022}, {\em
+        37},~1529--1551.
+    \newblock {\url{https://doi.org/10.1002/int.22684}}.
+    
+    \bibitem[Akram et~al.(2020)Akram, Yaqoob, Ali, and Chammam]{Akram2020}
+    Akram, M.; Yaqoob, N.; Ali, G.; Chammam, W.
+    \newblock Extensions of Dombi Aggregation Operators for Decision Making under
+    m-Polar Fuzzy Information.
+    \newblock {\em Journal of Mathematics} {\bf 2020}, {\em 2020},~4739567.
+    \newblock {\url{https://doi.org/10.1155/2020/4739567}}.
+    
+    \bibitem[Mardani et~al.(2018)Mardani, Nilashi, Zavadskas, Awang, Zare, and
+    Jamal]{Mardani2018}
+    Mardani, A.; Nilashi, M.; Zavadskas, E.K.; Awang, S.; Zare, H.; Jamal, N.M.
+    \newblock Decision making methods based on fuzzy aggregation operators: Three
+    decades review from 1986 to 2017.
+    \newblock {\em International Journal of Information Technology \& Decision
+        Making} {\bf 2018}, {\em 17},~391--466.
+    \newblock {\url{https://doi.org/10.1142/S021962201830001X}}.
+    
+    \bibitem[Sun et~al.(2018)Sun, Dong, and Liu]{Sun2018}
+    Sun, L.; Dong, H.; Liu, A.
+    \newblock Aggregation functions considering criteria interrelationships in
+    fuzzy multi-criteria decision making: State-of-the-art.
+    \newblock {\em IEEE Access} {\bf 2018}, {\em 6},~68104--68136.
+    \newblock {\url{https://doi.org/10.1109/ACCESS.2018.2879741}}.
+    
+    \bibitem[Kahraman et~al.(2015)Kahraman, Onar, and Oztaysi]{Kahraman2015}
+    Kahraman, C.; Onar, S.C.; Oztaysi, B.
+    \newblock Fuzzy multicriteria decision-making: A literature review.
+    \newblock {\em International Journal of Computational Intelligence Systems}
+    {\bf 2015}, {\em 8},~637--666.
+    \newblock {\url{https://doi.org/10.1080/18756891.2015.1046325}}.
+    
+    \bibitem[Mardani et~al.(2015)Mardani, Jusoh, and Zavadskas]{Mardani2015}
+    Mardani, A.; Jusoh, A.; Zavadskas, E.K.
+    \newblock Fuzzy multiple criteria decision-making techniques and applications
+    -- Two decades review from 1994 to 2014.
+    \newblock {\em Expert Systems with Applications} {\bf 2015}, {\em
+        42},~4126--4148.
+    \newblock {\url{https://doi.org/10.1016/j.eswa.2015.01.003}}.
+    
+    \bibitem[Petrovic et~al.(2023)Petrovic, Mihajlović, Markovic,
+    Hashemkhani~Zolfani, and Madić]{Petrovic2023}
+    Petrovic, G.S.; Mihajlović, J.; Markovic, D.; Hashemkhani~Zolfani, S.; Madić,
+    M.
+    \newblock Comparison of aggregation operators in the group decision-making
+    process: A real case study of location selection problem.
+    \newblock {\em Sustainability} {\bf 2023}, {\em 15},~8229.
+    \newblock {\url{https://doi.org/10.3390/su15108229}}.
+
+    \bibitem[Afzal et~al.(2018)Afzal, Ali, Ali, Hussain, Ali, Khan, Amin, Kang,
+    and Lee]{Afzal2018}
+    Afzal, M.; Ali, S.I.; Ali, R.; Hussain, M.; Ali, T.; Khan, W.A.; Amin, M.B.;
+    Kang, B.H.; Lee, S.
+    \newblock Personalization of wellness recommendations using contextual
+    interpretation.
+    \newblock {\em Expert Systems with Applications} {\bf 2018}, {\em
+        96},~506--521.
+    \newblock {\url{https://doi.org/10.1016/j.eswa.2017.11.006}}.
+
+    \bibitem[Shyur(2025)]{Shyur2025}
+    Shyur, H.J.
+    \newblock Combination weighting method using Z-numbers for multi-criteria
+    decision-making.
+    \newblock {\em Applied Soft Computing} {\bf 2025}, {\em 174},~112992.
+    \newblock {\url{https://doi.org/10.1016/j.asoc.2025.112992}}.
+    
+    \bibitem[P{\'{e}}rez-Ca{\~{n}}edo et~al.(2023)P{\'{e}}rez-Ca{\~{n}}edo, Porras,
+    Pelta, and Verdegay]{PerezCanedo2022}
+    P{\'{e}}rez-Ca{\~{n}}edo, B.; Porras, C.; Pelta, D.A.; Verdegay, J.L.
+    \newblock Modeling Contexts as Fuzzy Propositions in Optimization Problems.
+    \newblock {\em {IEEE} Transactions on Fuzzy Systems} {\bf 2023}, {\em
+        31},~1474--1483.
+    \newblock {\url{https://doi.org/10.1109/tfuzz.2022.3203786}}.
+    
+    \bibitem[Pérez-Cañedo et~al.(2024)Pérez-Cañedo, Novoa-Hernández, Porras,
+    Pelta, and Verdegay]{PerezCanedo2024}
+    Pérez-Cañedo, B.; Novoa-Hernández, P.; Porras, C.; Pelta, D.A.; Verdegay,
+    J.L.
+    \newblock Contextual analysis of solutions in a tourist trip design problem: A
+    fuzzy logic-based approach.
+    \newblock {\em Applied Soft Computing} {\bf 2024}, {\em 154},~111351.
+    \newblock {\url{https://doi.org/10.1016/j.asoc.2024.111351}}.
+    
+    \bibitem[Zimmermann and Zysno(1980)]{Zimmermann1980}
+    Zimmermann, H.; Zysno, P.
+    \newblock Latent Connectives in Human Decision Making.
+    \newblock {\em Fuzzy Sets and Systems} {\bf 1980}, {\em 4},~37--51.
+    \newblock {\url{https://doi.org/10.1016/0165-0114(80)90062-7}}.
+    
+    \bibitem[Natoli et~al.(2024)Natoli, Feeny, Li, and Zuhair]{Natoli2024}
+    Natoli, R.; Feeny, S.; Li, J.; Zuhair, S.
+    \newblock Aggregating the Human Development Index: A Non-Compensatory Approach.
+    \newblock {\em Social Indicators Research} {\bf 2024}, {\em 172},~499--515.
+    \newblock {\url{https://doi.org/10.1007/s11205-024-03318-7}}.
+    
+    \bibitem[Blancas and Contreras(2024)]{Blancas2024}
+    Blancas, F.; Contreras, I.
+    \newblock Global {SDG} Composite Indicator: A New Methodological Proposal That
+    Combines Compensatory and Non-Compensatory Aggregations.
+    \newblock {\em Sustainable Development} {\bf 2024}.
+    \newblock {\url{https://doi.org/10.1002/sd.3109}}.
+
+    \bibitem[Teng and Tan(2008)]{TengTan2008}
+    Teng, T.H.; Tan, A.H.
+    \newblock Cognitive Agents Integrating Rules and Reinforcement Learning for
+    Context-Aware Decision Support.
+    \newblock In Proceedings of the 2008 IEEE/WIC/ACM International Conference on
+    Web Intelligence and Intelligent Agent Technology, 2008, pp. 318--321.
+    \newblock {\url{https://doi.org/10.1109/WIIAT.2008.163}}.
+
+    \bibitem[Yao and Kumar(2012)]{YaoKumar2012}
+    Yao, W.; Kumar, A.
+    \newblock Integrating Clinical Pathways into {CDSS} Using Context and Rules: A
+    Case Study in Heart Disease.
+    \newblock In Proceedings of the 2nd ACM SIGHIT International Health Informatics
+    Symposium, 2012, pp. 267--276.
+    \newblock {\url{https://doi.org/10.1145/2110363.2110431}}.
+
+    \bibitem[Cronholm and G{\"o}bel(2022)]{CronholmGoebel2022}
+    Cronholm, S.; G{\"o}bel, H.
+    \newblock Design Principles for Human-Centred {AI}.
+    \newblock In {\em ECIS 2022 Research Papers}; 2022; paper~32.
+    \newblock {\url{https://aisel.aisnet.org/ecis2022_rp/32}}.
+
+    \bibitem[Yager(2005)]{Yager2005}
+    Yager, R.R.
+    \newblock Extending Multicriteria Decision Making by Mixing t-Norms and {OWA}
+    Operators.
+    \newblock {\em International Journal of Intelligent Systems} {\bf 2005}, {\em
+        20},~453--474.
+    \newblock {\url{https://doi.org/10.1002/int.20075}}.
+
+    \bibitem[del~Moral et~al.(2017)del~Moral, Chiclana, Tapia~Garc{\'i}a, and
+    Herrera-Viedma]{MoralEtAl2017}
+    del~Moral, M.J.; Chiclana, F.; Tapia~Garc{\'i}a, J.M.; Herrera-Viedma, E.
+    \newblock An Analysis on Consensus Measures in Group Decision Making.
+    \newblock In Proceedings of the 2017 4th International Conference on Control,
+    Decision and Information Technologies ({CoDIT}), 2017, pp. 0262--0267.
+    \newblock {\url{https://doi.org/10.1109/CoDIT.2017.8102605}}.
+
+    \bibitem[Merkert et~al.(2015)Merkert, Mueller, and Hubl]{MerkertEtAl2015}
+    Merkert, J.; Mueller, M.; Hubl, M.
+    \newblock A Survey of the Application of Machine Learning in Decision Support
+    Systems.
+    \newblock In Proceedings of the 23rd European Conference on Information Systems
+    ({ECIS}), 2015.
+    \newblock {\url{https://doi.org/10.18151/7217429}}.
+
+    \bibitem[Csisz{\'a}r(2021)]{Csiszar2021}
+    Csisz{\'a}r, O.
+    \newblock Ordered Weighted Averaging Operators: A Short Review.
+    \newblock {\em IEEE Systems, Man, and Cybernetics Magazine} {\bf 2021}, {\em
+        7},~4--12.
+    \newblock {\url{https://doi.org/10.1109/MSMC.2020.3036378}}.
+
+    \bibitem[Trillo et~al.(2023)Trillo, Cabrerizo, del~Moral, Morente-Molinera,
+    Tapia, and Herrera-Viedma]{TrilloEtAl2023}
+    Trillo, J.R.; Cabrerizo, F.J.; del~Moral, M.J.; Morente-Molinera, J.A.;
+    Tapia, J.M.; Herrera-Viedma, E.
+    \newblock A Consensus-Based Multi-Criteria Group Decision-Making Method Based
+    on an Aggregated Operator Customised by Experts.
+    \newblock In Proceedings of the 2023 9th International Conference on Control,
+    Decision and Information Technologies ({CoDIT}), 2023.
+    \newblock {\url{https://doi.org/10.1109/CoDIT58514.2023.10284209}}.
+
+\end{thebibliography}
+\PublishersNote{}
+\end{adjustwidth}
+
+\end{document}

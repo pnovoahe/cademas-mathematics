@@ -496,14 +496,14 @@ To investigate these systemic effects, we conduct Monte Carlo simulations on syn
 \end{enumerate}
 
 We run a set of experiments considering a universe of $n=1000$ candidates (alternatives) from which only the Top-$K$ tier ($K=100$) are supposed to receive intervention. Depending on the experiment, we evaluate the linear ($A_L$), minimum ($A_C^{\min}$), and weighted geometric ($A_G$) aggregation operators. The trade-off parameter $\lambda$ is either swept or fixed according to the objective of each experiment. Performance is assessed using complementary metrics. Let $\Pi_K$ denote the selected Top-$K$ tier and $X_{\mathrm{veto}}=\{i:Q_i=0\}$ the set of contextually excluded candidates. The policy violation rate is defined as
-\[
+\begin{equation}
 V_K=\frac{|\Pi_K\cap X_{\mathrm{veto}}|}{K},
-\]
+\end{equation}
 while the average predictive score is computed as
-\[
+\begin{equation}
 \bar{R}_K=\frac{1}{|\Pi_K\setminus X_{\mathrm{veto}}|}
 \sum_{i\in \Pi_K\setminus X_{\mathrm{veto}}}R_i,
-\]
+\end{equation}
 thus measuring the predictive quality of the selected compliant alternatives. {\color{red}To quantify rank stability under contextual imprecision, let $P_i$ and
 $P_i(\sigma)$ denote the baseline and perturbed priority scores, and let
 $r_i$ and $r_i(\sigma)$ be the corresponding rank positions (higher
@@ -698,7 +698,9 @@ These patterns are consistent with Theorem~\ref{thm:homog_preserv}. Under linear
 \end{figure}
 }
 
+{\color{red}
 Together with the previous experiments, these results show that the choice of aggregation operator influences not only the balance between prediction and context, but also the robustness of the resulting prioritization. While the linear operator performs well within a limited range of $\lambda$ for compliance-oriented objectives, the minimum operator preserves contextual constraints and exhibits greater stability of the Top-$K$ tier under contextual imprecision, particularly when the context component retains substantial weight in the aggregation.
+}
 
 \section{Analysis in a Realistic Case Study}
 \label{sect:real_example}
@@ -757,26 +759,27 @@ Five integration settings are compared: the linear operator $A_L$ with $\lambda=
 \label{fig:real_example_plane} 
 \end{figure} 
 
-\begin{figure}[H]
-\isPreprints{}{% This command is only used for ``preprints''.
-\begin{adjustwidth}{-\extralength}{0cm}}
-\centering
-    %} % If the paper is ``preprints'', please uncomment this parenthesis.
-\hfill
-\includegraphics[width=\fulllength]{figures/real_example_bump.pdf}
-\caption{Rank evolution of the baseline Top-$K$ employees across the five integration settings. Star markers denote employees entering the Top-$K$ tier under an alternative operator or parameter setting. For these additional employees, the numeric prefix in the label indicates their rank in the baseline configuration ($A_L$, $\lambda=0.5$).}
-\label{fig:real_example_bump}
-\isPreprints{}{% This command is only used for ``preprints''.
-\end{adjustwidth}
-} % If the paper is ``preprints'', please uncomment this parenthesis.
-% \end{adjustwidth}
-\end{figure} 
 
 The results in Table~\ref{tab:real_example} show that decreasing $\lambda$ shifts the linear operator toward a progressively more context-driven prioritization. Employees with strong contextual alignment but only modest predictive scores move upward in the ranking, even when their estimated attrition risk is low. The most extreme example is Julia Smith, whose context score is the highest in the cohort ($Q_i=0.733$) but whose predictive score is only $R_i=0.005$. Under the baseline configuration ($A_L$, $\lambda=0.5$), she ranks 48th, yet under $A_L$ with $\lambda=0.1$ she becomes the highest-priority employee. Similar behavior is observed for Caroline Adams, Caroline Roberts, Hunter Adams, and Claire Bailey, all of whom enter the Top-$K$ exclusively under the context-oriented linear configuration. Figure~\ref{fig:real_example_plane} shows that these employees occupy the upper-left region of the $(Q_i,R_i)$ plane, where strong contextual support compensates for weak predictive evidence.
 
 Increasing $\lambda$ produces the opposite effect. As predictive evidence becomes dominant, employees with high predicted attrition risk but weak contextual alignment progressively move toward the intervention tier. Table~\ref{tab:real_example} shows that Camila Phillips, who has the highest predictive score in the cohort ($R_i=0.989$) but a null context score ($Q_i=0$), rises from rank 26 in the baseline configuration to the Top-$K$ under $A_L$ with $\lambda=0.9$. Leah Cooper, Amelia Davis, and Dominic Collins exhibit the same tendency, although with non-zero context scores. Their locations in Figure~\ref{fig:real_example_plane} correspond to the lower-right portion of the score space, illustrating how highly predictive but weakly aligned employees become increasingly favored as the predictive component receives greater weight.
 
 The non-linear operators exhibit markedly different behavior. As shown in Table~\ref{tab:real_example}, the conjunctive minimum operator never allows employees with $Q_i=0$ to enter the prioritized set, regardless of their predictive score. The weighted geometric mean behaves less restrictively but still penalizes severe imbalance between prediction and context, preventing contextually excluded employees from reaching the intervention tier. Consequently, both operators preserve the contextual constraints identified in the theoretical analysis, whereas the linear operator eventually overrides them for sufficiently large values of $\lambda$.
+
+\begin{figure}[H]
+    \isPreprints{}{% This command is only used for ``preprints''.
+    \begin{adjustwidth}{-\extralength}{0cm}}
+    \centering
+        %} % If the paper is ``preprints'', please uncomment this parenthesis.
+    \hfill
+    \includegraphics[width=\fulllength]{figures/real_example_bump.pdf}
+    \caption{Rank evolution of the baseline Top-$K$ employees across the five integration settings. Star markers denote employees entering the Top-$K$ tier under an alternative operator or parameter setting. For these additional employees, the numeric prefix in the label indicates their rank in the baseline configuration ($A_L$, $\lambda=0.5$).}
+    \label{fig:real_example_bump}
+    \isPreprints{}{% This command is only used for ``preprints''.
+    \end{adjustwidth}
+    } % If the paper is ``preprints'', please uncomment this parenthesis.
+    % \end{adjustwidth}
+\end{figure} 
 
 The minimum operator also introduces a characteristic behavior absent from the compensatory schemes. Because the aggregated score is determined by the limiting component, different employees frequently receive identical priority values, producing ties in the final ranking. This effect is visible in Table~\ref{tab:real_example}, where several employees share exactly the same aggregated score under $A_C^{\min}$, and becomes more apparent in the rank trajectories of Figure~\ref{fig:real_example_bump}, where groups of employees collapse onto the same ranking level. Such ties are a direct consequence of the conjunctive semantics of the minimum operator rather than an artifact of the dataset.
 

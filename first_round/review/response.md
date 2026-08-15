@@ -85,4 +85,22 @@ Thank you for this constructive methodological observation. We completely agree 
 
 ---
 
-8. **Robustness claim (Section 4.3).** The claim that non-linear operators are more robust to contextual uncertainty is based on a narrow experimental setting. The comparison in Section 4.3 uses only one value, \(\lambda=0.35\), one noise distribution, and one synthetic population model. Moreover, the reported difference in Kendall’s rank correlation is moderate. The authors should investigate several values of \(\lambda\), different noise models and population distributions, and possibly additional ranking-stability measures. Otherwise, the conclusions should be restricted to the experimental conditions considered.
+### 8. Robustness claim (Section 4.3).
+
+The claim that non-linear operators are more robust to contextual uncertainty is based on a narrow experimental setting. The comparison in Section 4.3 uses only one value, \(\lambda=0.35\), one noise distribution, and one synthetic population model. Moreover, the reported difference in Kendall’s rank correlation is moderate. The authors should investigate several values of \(\lambda\), different noise models and population distributions, and possibly additional ranking-stability measures. Otherwise, the conclusions should be restricted to the experimental conditions considered.
+
+#### Response 8: 
+Thank you for this constructive criticism. We completely agree that the initial experimental setup was too narrow to support a generalized claim of robustness.
+
+To address this, we have significantly expanded the rank stability experiment (now Section 4.4) into a comprehensive factorial design. Specifically, we have incorporated:
+
+1. Multiple trade-off regimes: We now evaluate the operators across three weight configurations ($\lambda \in \{0.25, 0.50, 0.75\}$).
+
+2. Different noise models: We introduced Uniform noise perturbations ($\mathcal{U}(-\sigma, \sigma)$) alongside the Gaussian noise.
+
+3. Different population distributions: We expanded the population generation to include both Uniform ($\mathcal{U}(0,1)$) and Beta ($\mathcal{B}(2,2)$) distributions.
+
+4. An additional ranking-stability measure: In addition to Kendall’s $\bar{\tau}$, we introduced the Top-$K$ Overlap (Jaccard Index, $J_K$) to specifically evaluate the stability of the final selected tier, which is critical for practical policy-making.As a result of this broader analysis, we have nuanced our conclusions. The expanded experiments confirm that the minimum operator provides superior structural robustness and Top-$K$ overlap for moderate or context-heavy weights ($\lambda \le 0.50$). However, as predictive dominance increases ($\lambda = 0.75$), the linear operator exhibits higher global correlation. We have updated the text and figures to reflect that rank stability under imprecision is $\lambda$-dependent, explicitly restricting our robustness claims to the appropriate regimes.
+
+---
+
