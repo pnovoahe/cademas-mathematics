@@ -584,9 +584,6 @@ section introduces the aggregation operators considered in this study
 and develops the theoretical properties that motivate the subsequent
 experimental analysis.
 
-
-\section{Aggregation Semantics and Theoretical Analysis}
-
 % R1-2, R1-3, R1-4, R1-5
 % Reestructurar toda la teoría alrededor de propiedades.
 
@@ -603,9 +600,55 @@ experimental analysis.
 %
 % Explicitar supuestos.
 
+\section{Aggregation Semantics and Theoretical Analysis}
+\label{sect:aggregation-theory}
+
+The aggregation mechanism in CADEMAS-ML determines how predictive
+evidence and contextual knowledge are integrated into a unified
+prioritization decision. Therefore, the aggregation operator should not
+be interpreted as a mere mathematical component, but as an explicit
+design choice that defines the interaction between machine-learning
+evidence and contextual requirements.
+
+This section provides the theoretical foundations required to answer the
+research questions introduced in Section~\ref{subsec:research-gap},
+particularly those related to the role of aggregation semantics in
+cooperative automated decision-making. Specifically, we analyze how
+different aggregation regimes modify the interaction between predictive
+and contextual information (RQ1), under which conditions contextual
+constraints and veto-like policies are preserved or violated (RQ2), how
+aggregation semantics influence robustness to predictive
+overconfidence and contextual uncertainty (RQ3), and how they affect the
+stability of the resulting prioritization rankings (RQ4).
+
+The analysis does not aim to introduce a new aggregation operator or to
+extend classical aggregation theory. Instead, it studies existing
+aggregation paradigms as alternative policy semantics within the
+CADEMAS-ML architecture. First, we formalize the structural properties
+that characterize aggregation behavior, including boundedness,
+monotonicity, continuity, zero absorption, contextual veto preservation,
+and compensability. Then, we analyze three representative aggregation
+regimes with different decision semantics: fully compensatory linear
+aggregation, non-linear sub-compensatory aggregation through the weighted
+geometric mean, and non-compensatory minimum aggregation. Finally, we
+derive theoretical conditions describing contextual veto preservation,
+rank reversal under compensation, and sensitivity to perturbations in
+predictive and contextual assessments.
+
+These results provide a formal basis for interpreting aggregation
+operators as policy-design components in cooperative automated
+decision-making systems and motivate the experimental evaluation of
+their practical consequences in the following sections.
+
 
 \subsection{Structural Properties of Aggregation Operators}
 \label{subsec:structural-properties}
+
+Without loss of generality, all scores are assumed to be normalized
+within the unit interval. Any bounded continuous scoring scale
+$[a,b]$ can be transformed into this representation through a monotonic
+affine transformation, preserving the ordering relations and the
+aggregation semantics considered in this work.
 
 Let
 \begin{equation}
@@ -921,40 +964,21 @@ meaning that the contextual advantage of alternative $j$ compensates for
 its predictive disadvantage.
 
 \begin{Theorem}[General rank reversal condition under compensation]
-\label{thm:general-rank-reversal}
-Let $A:[0,1]^2\rightarrow[0,1]$ be a continuous aggregation operator
-strictly increasing in both arguments and assume that it is compensatory,
-that is, there exist values $r_1>r_2$ and $q_1<q_2$ such that
-$A(r_2,q_2)>A(r_1,q_1)$.
-
-For two alternatives $i$ and $j$ satisfying $R_i>R_j$,
-a rank reversal in favour of alternative $j$ occurs if and only if
-$Q_j>Q_i+\Phi_A(R_i,R_j,Q_i)$,
-where $\Phi_A$ is the minimum contextual improvement required to compensate
-for the predictive difference and is implicitly defined by
-$A(R_j,Q_i+\Phi_A)=A(R_i,Q_i)$.
-
-Therefore, whenever the compensatory capacity of the operator is
-sufficient, a contextual advantage can overcome a predictive advantage.
+    \label{thm:general-rank-reversal}
+    Let $A:[0,1]^2\rightarrow[0,1]$ be a continuous aggregation operator strictly increasing in both arguments. For two alternatives $i$ and $j$ satisfying predictive dominance $R_i>R_j$, assume the operator provides sufficient compensatory capacity such that there exists a contextual assessment $q_{\max} \le 1$ satisfying $A(R_j, q_{\max}) > A(R_i, Q_i)$.
+    
+    Under these conditions, a rank reversal in favour of alternative $j$ occurs if and only if
+    $Q_j > Q_i+\Phi_A(R_i,R_j,Q_i)$,
+    where $\Phi_A$ is the minimum contextual improvement required to compensate for the predictive difference, implicitly defined by $A(R_j,Q_i+\Phi_A)=A(R_i,Q_i)$.
 \end{Theorem}
-
+    
 \begin{proof}
-Fix $R_i>R_j$ and $Q_i$. Define
-$g(q)=A(R_j,q)-A(R_i,Q_i)$.
-Because $A$ is continuous and strictly increasing in its second argument,
-$g(q)$ is also continuous and strictly increasing.
-At $q=Q_i$,
-$g(Q_i)=A(R_j,Q_i)-A(R_i,Q_i)<0$,
-because $A$ is strictly increasing in its first argument and
-$R_j<R_i$.
-If the operator is compensatory, there exists a contextual value
-$q^\ast>Q_i$ such that
-$A(R_j,q^\ast)=A(R_i,Q_i)$.
-By continuity, this value is unique. Defining
-$\Phi_A(R_i,R_j,Q_i)=q^\ast-Q_i$,
-we obtain $P_j>P_i$ if and only if $Q_j>q^\ast$,
-which is equivalent to
-$Q_j>Q_i+\Phi_A(R_i,R_j,Q_i)$.
+    Fix $R_i>R_j$ and $Q_i$. Define the difference function
+    $g(q)=A(R_j,q)-A(R_i,Q_i)$.
+    Because $A$ is continuous and strictly increasing in its second argument, $g(q)$ is also continuous and strictly increasing.
+    At $q=Q_i$, $g(Q_i)=A(R_j,Q_i)-A(R_i,Q_i)<0$ because $A$ is strictly increasing in its first argument and $R_j<R_i$.
+    By hypothesis, there exists $q_{\max}$ such that $g(q_{\max}) > 0$. Therefore, by the Intermediate Value Theorem, there exists a unique contextual value $q^\ast \in (Q_i, q_{\max})$ such that $g(q^\ast)=0$, which implies $A(R_j,q^\ast)=A(R_i,Q_i)$.
+    Defining the required threshold as $\Phi_A(R_i,R_j,Q_i)=q^\ast-Q_i$, we obtain $P_j>P_i$ (or $g(Q_j)>0$) if and only if $Q_j>q^\ast$, which is equivalent to $Q_j>Q_i+\Phi_A(R_i,R_j,Q_i)$.
 \end{proof}
 
 The theorem shows that rank reversal is not an artefact of a particular
@@ -975,14 +999,137 @@ degree to which contextual requirements can modify or override
 data-driven recommendations.
 
 \subsection{Sensitivity to Predictive and Contextual Perturbations}
-
+\label{subsec:sensitivity-analysis}
 % R1-9, R2-5
 % Nuevo resultado teórico.
-%
-% Analizar:
-% |A(R,Q+e)-A(R,Q)|
-%
+% Analizar: |A(R,Q+e)-A(R,Q)|
 % Justificación formal de experimentos de robustez.
+
+The previous sections analyzed the structural properties of aggregation
+operators in terms of compensation and contextual veto preservation.
+However, in practical decision-support systems, both predictive scores
+and contextual assessments are subject to uncertainty. Predictive
+models may produce unstable estimates due to limited data, model
+uncertainty, or distribution changes, whereas contextual assessments may
+vary because of incomplete knowledge, expert disagreement, or evolving
+organizational requirements.
+
+Therefore, an additional relevant property of an aggregation mechanism
+is its sensitivity to perturbations in its input dimensions. In the
+context of CADEMAS-ML, this property determines how strongly changes in
+predictive evidence or contextual requirements affect the final
+prioritization score.
+
+Let $A:[0,1]^2\rightarrow[0,1]$ be an aggregation operator. Consider a
+perturbation $\epsilon$ applied to the contextual assessment while the
+predictive score remains fixed. The resulting variation in the
+prioritization score is
+$\Delta_Q(\epsilon)=\bigl|A(R,Q+\epsilon)-A(R,Q)\bigr|$.
+Similarly, a perturbation in the predictive assessment produces
+$\Delta_R(\epsilon)=\bigl|A(R+\epsilon,Q)-A(R,Q)\bigr|$.
+These quantities measure the local influence of each information source
+on the final decision score. Operators that strongly amplify small
+perturbations may lead to unstable rankings, whereas operators with
+bounded sensitivity provide greater robustness against uncertainty in
+predictive or contextual information.
+
+\begin{Theorem}[Lipschitz sensitivity of aggregation operators]
+\label{thm:lipschitz-sensitivity}
+Let $A:[0,1]^2\rightarrow[0,1]$ be an aggregation operator continuously
+differentiable in the region containing
+the line segment between $(R,Q)$ and $(R+\epsilon_R,Q+\epsilon_Q)$.
+If there exist finite constants $L_R$ and $L_Q$ such that
+\begin{equation*}
+\bigl|\partial A/\partial R\bigr|\leq L_R \;\;\;\;\text{and}\;\;\;\;\;\; 
+\bigl|\partial A/\partial Q\bigr|\leq L_Q,
+\end{equation*}
+then, for any perturbations $\epsilon_R$ and $\epsilon_Q$,
+\begin{equation*}
+\bigl|A(R+\epsilon_R,Q+\epsilon_Q)-A(R,Q)\bigr|
+\leq L_R|\epsilon_R|+L_Q|\epsilon_Q|.
+\end{equation*}
+\end{Theorem}
+
+\begin{proof}
+By the Mean Value Theorem, there exists a point
+$(\xi_R,\xi_Q)$ between $(R,Q)$ and
+$(R+\epsilon_R,Q+\epsilon_Q)$ such that
+\begin{equation*}
+A(R+\epsilon_R,Q+\epsilon_Q)-A(R,Q)
+=
+(\partial A/\partial R)(\xi_R,\xi_Q)\epsilon_R
++
+(\partial A/\partial Q)(\xi_R,\xi_Q)\epsilon_Q.
+\end{equation*}
+
+Taking absolute values and applying the derivative bounds yields
+\begin{equation*}
+\bigl|A(R+\epsilon_R,Q+\epsilon_Q)-A(R,Q)\bigr|
+\leq L_R|\epsilon_R|+L_Q|\epsilon_Q|.
+\end{equation*}
+\end{proof}
+
+The previous theorem establishes a general robustness condition for
+aggregation mechanisms. The constants $L_R$ and $L_Q$ quantify the
+maximum amplification of uncertainty from each decision component.
+Consequently, aggregation operators with smaller sensitivity constants
+produce more stable prioritization scores under uncertain inputs.
+
+For the linear aggregation operator,
+$A_L(R,Q)=\lambda R+(1-\lambda)Q$,
+the sensitivity coefficients are constant:
+$L_R=\lambda$ and $L_Q=1-\lambda$.
+Therefore, the influence of predictive and contextual uncertainty is
+uniform throughout the decision space. This property explains the fully
+compensatory behaviour of the linear operator: a perturbation in one
+dimension has exactly the same marginal effect regardless of the
+current values of prediction and context.
+
+For the weighted geometric operator,
+$A_G(R,Q)=R^\lambda Q^{1-\lambda}$,
+the local sensitivities are
+$\partial A_G/\partial R=\lambda R^{\lambda-1}Q^{1-\lambda}$
+and
+$\partial A_G/\partial Q=(1-\lambda)R^\lambda Q^{-\lambda}$.
+Unlike the linear operator, sensitivity is dependent on the current
+state of the decision case. In particular, when $Q$ approaches zero,
+contextual perturbations may have a stronger relative influence on the
+final score. This behaviour reflects the non-linear penalization of
+contextual incompatibility and provides a mathematical explanation for
+the stronger robustness of non-compensatory and sub-compensatory aggregation mechanisms.
+
+For the minimum operator,
+$A_{\min}(R,Q)=\min(R,Q)$,
+the final score is completely determined by the limiting component.
+Consequently, the operator exhibits zero compensation: improving the
+non-limiting input has no effect until it becomes the active constraint.
+This property provides maximal preservation of contextual restrictions
+but may reduce responsiveness when contextual assessments are uncertain. This property can be formilzed in the following corollary:
+
+\begin{Corollary}[Minimum operator stability under inactive-component perturbations]
+    \label{cor:min-noise}
+    Consider a decision case evaluated under the minimum operator $A_M(R,Q) = \min(R,Q)$. If the predictive score acts as the strict limiting component ($R < Q$), the operator completely absorbs any contextual perturbation $\varepsilon$ as long as the ordinal relationship is maintained (i.e., $R \le Q + \varepsilon$). Under these conditions, the sensitivity is zero:
+    $$ \bigl| A_M(R, Q+\varepsilon) - A_M(R, Q) \bigr| = |R - R| = 0. $$
+\end{Corollary}
+\begin{proof}
+    Let the initial state of the decision case be defined by $R$ and $Q$. By hypothesis, the predictive score is the strict limiting component, meaning $R < Q$. By the definition of the minimum operator, the initial aggregated score is:
+    $$ A_M(R, Q) = \min(R, Q) = R. $$
+    
+    Now, consider a perturbed contextual assessment $Q' = Q + \varepsilon$. We are given the condition that the perturbation $\varepsilon$ (whether positive or negative) is bounded such that the ordinal relationship is maintained, i.e., $R \le Q + \varepsilon$. Evaluating the minimum operator under this perturbed state yields:
+    $$ A_M(R, Q+\varepsilon) = \min(R, Q+\varepsilon) = R. $$
+    
+    Calculating the absolute difference between the perturbed and initial states gives the sensitivity:
+    $$ \bigl| A_M(R, Q+\varepsilon) - A_M(R, Q) \bigr| = | R - R | = 0. $$
+    Thus, the perturbation is completely absorbed, and the final prioritization score remains unaffected.
+\end{proof}
+
+This result illustrates the asymmetric robustness of non-compensatory operators: they are insensitive to perturbations of the non-limiting component, but highly sensitive when perturbations modify the active constraint.
+
+These analytical differences motivate the robustness experiments
+conducted in the following sections. Rather than evaluating aggregation
+operators only according to final ranking performance, we analyse how
+their semantic properties influence stability under perturbations of
+predictive evidence and contextual assessments.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
