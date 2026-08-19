@@ -1,0 +1,9 @@
+{
+  "experiment": "03_robustness/population/weak_sparse/lambda",
+  "fingerprint": "6dc80a5764a7129e",
+  "timestamp_utc": "2026-08-17T23:21:44.266899+00:00",
+  "n_rows": 33000,
+  "scenario": "weak_sparse",
+  "sweep": "lambda",
+  "sigma_q": 0.0
+}

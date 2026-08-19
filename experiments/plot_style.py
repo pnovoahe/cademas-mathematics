@@ -103,23 +103,26 @@ OPERATOR_STYLE = {
     "linear": {
         "color": OPERATOR_COLORS["linear"],
         "marker": "v",
-        "markersize": 8,
+        "markersize": 13.0,
         "linestyle": "-",
         "linewidth": 2.5,
-    },
-    "min": {
-        "color": OPERATOR_COLORS["min"],
-        "marker": "s",
-        "markersize": 6,
-        "linestyle": "-",
-        "linewidth": 2.0,
+        "zorder": 2,
     },
     "geometric": {
         "color": OPERATOR_COLORS["geometric"],
-        "marker": "o",
-        "markersize": 5,
+        "marker": "s",
+        "markersize": 9.0,
         "linestyle": "-",
         "linewidth": 2.0,
+        "zorder": 3,
+    },
+    "min": {
+        "color": OPERATOR_COLORS["min"],
+        "marker": "o",
+        "markersize": 6.5,
+        "linestyle": "-",
+        "linewidth": 2.0,
+        "zorder": 4,
     },
     "max": {
         "color": OPERATOR_COLORS["max"],
@@ -127,6 +130,7 @@ OPERATOR_STYLE = {
         "markersize": 6,
         "linestyle": "-",
         "linewidth": 1.8,
+        "zorder": 3,
     },
 }
 

@@ -1,0 +1,30 @@
+\begin{table}[H]
+\caption{Ranking stability under unbiased score uncertainty at $\lambda=0.75$. $R'_i = \mathrm{clip}(R_i + \varepsilon_i, 0, 1)$, $\varepsilon_i \sim \mathcal{N}(0, \sigma_R^2)$, applied to all cases. Reference ranking uses exact $R$. Values are Monte Carlo means over $1000$ replications ($N=1000$, $K=100$).}
+\label{tab:score-stability}
+\centering\small\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lccc}
+\toprule
+$\sigma_R$ & Operator & Kendall $\tau$ & Jaccard Top-$K$ \\
+\midrule
+$0.00$ & $A_G$ & 1.0000 & 1.0000 \\
+ & $A_L$ & 1.0000 & 1.0000 \\
+ & $A_M$ & 1.0000 & 1.0000 \\
+\midrule
+$0.02$ & $A_G$ & 0.9663 & 0.8948 \\
+ & $A_L$ & 0.9442 & 0.8373 \\
+ & $A_M$ & 0.9727 & 0.9274 \\
+\midrule
+$0.05$ & $A_G$ & 0.9162 & 0.7620 \\
+ & $A_L$ & 0.8629 & 0.6589 \\
+ & $A_M$ & 0.9321 & 0.8382 \\
+\midrule
+$0.10$ & $A_G$ & 0.8371 & 0.5960 \\
+ & $A_L$ & 0.7390 & 0.4781 \\
+ & $A_M$ & 0.8677 & 0.7148 \\
+\midrule
+$0.20$ & $A_G$ & 0.7049 & 0.4021 \\
+ & $A_L$ & 0.5454 & 0.3356 \\
+ & $A_M$ & 0.7572 & 0.5405 \\
+\bottomrule
+\end{tabular}
+\end{table}

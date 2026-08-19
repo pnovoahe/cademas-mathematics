@@ -1,0 +1,19 @@
+{
+  "experiment": "03_robustness/context_noise",
+  "fingerprint": "87a647a3f31f263f",
+  "timestamp_utc": "2026-08-17T23:18:45.790571+00:00",
+  "n_rows": 15000,
+  "analysis": "context_noise",
+  "scenario": "baseline",
+  "lambda": 0.75,
+  "sigma_q_values": [
+    0.0,
+    0.05,
+    0.1,
+    0.15,
+    0.2
+  ],
+  "n_monte_carlo": 1000,
+  "seed_base": 42,
+  "ci_level": 0.95
+}

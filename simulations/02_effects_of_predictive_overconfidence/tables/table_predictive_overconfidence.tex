@@ -1,0 +1,28 @@
+\begin{table}[H]
+\caption{Policy violation rate $V$ and predictive utility $\bar{R}$ (mean original $R$ of the Top-$K$ set) under predictive overconfidence at $\lambda=0.75$. Overconfidence $R'=\mathrm{clip}(R+\delta,0,1)$ is applied when $Q_i\le 0.25$. Values are Monte Carlo means and 95\% percentile confidence intervals over 1000 replications ($N=1000$, $K=100$).}
+\label{tab:predictive-overconfidence}
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{llccccccc}
+\toprule
+$\delta$ & Operator & $V$ mean & $V$ std & $V$ CI low & $V$ CI high & $\bar{R}$ mean & $\bar{R}$ CI low & $\bar{R}$ CI high \\
+\midrule
+\multirow{3}{*}{$0.00$} & $A_L$ (Linear) & 0.077 & 0.036 & 0.020 & 0.150 & 0.850 & 0.835 & 0.866 \\
+ & $A_G$ (Geometric) & 0.000 & 0.000 & 0.000 & 0.000 & 0.818 & 0.798 & 0.837 \\
+ & $A_M$ (Minimum) & 0.000 & 0.000 & 0.000 & 0.000 & 0.744 & 0.721 & 0.766 \\
+\midrule
+\multirow{3}{*}{$0.10$} & $A_L$ (Linear) & 0.251 & 0.078 & 0.080 & 0.390 & 0.880 & 0.862 & 0.896 \\
+ & $A_G$ (Geometric) & 0.000 & 0.000 & 0.000 & 0.000 & 0.818 & 0.800 & 0.837 \\
+ & $A_M$ (Minimum) & 0.000 & 0.000 & 0.000 & 0.000 & 0.744 & 0.721 & 0.766 \\
+\midrule
+\multirow{3}{*}{$0.20$} & $A_L$ (Linear) & 0.131 & 0.076 & 0.000 & 0.280 & 0.855 & 0.842 & 0.868 \\
+ & $A_G$ (Geometric) & 0.000 & 0.000 & 0.000 & 0.000 & 0.819 & 0.802 & 0.837 \\
+ & $A_M$ (Minimum) & 0.000 & 0.000 & 0.000 & 0.000 & 0.744 & 0.721 & 0.766 \\
+\midrule
+\multirow{3}{*}{$0.30$} & $A_L$ (Linear) & 0.022 & 0.039 & 0.000 & 0.130 & 0.830 & 0.812 & 0.847 \\
+ & $A_G$ (Geometric) & 0.000 & 0.000 & 0.000 & 0.000 & 0.819 & 0.802 & 0.837 \\
+ & $A_M$ (Minimum) & 0.000 & 0.000 & 0.000 & 0.000 & 0.744 & 0.721 & 0.766 \\
+\bottomrule
+\end{tabular}
+\end{table}

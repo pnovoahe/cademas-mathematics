@@ -1,0 +1,9 @@
+{
+  "experiment": "03_robustness/population/high_r_overlap/lambda",
+  "fingerprint": "65b7951b7b369c55",
+  "timestamp_utc": "2026-08-17T23:22:54.875144+00:00",
+  "n_rows": 33000,
+  "scenario": "high_r_overlap",
+  "sweep": "lambda",
+  "sigma_q": 0.0
+}

@@ -1,0 +1,9 @@
+{
+  "experiment": "03_robustness/population/baseline/sigma",
+  "fingerprint": "5cd6ab323a2c1ecd",
+  "timestamp_utc": "2026-08-17T23:19:33.971311+00:00",
+  "n_rows": 15000,
+  "scenario": "baseline",
+  "sweep": "sigma_q",
+  "lambda": 0.75
+}

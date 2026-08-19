@@ -1,0 +1,28 @@
+\begin{table}[H]
+\caption{Ranking stability relative to the unperturbed ranking ($\delta=0$) under predictive overconfidence at $\lambda=0.75$. Kendall $\tau$ compares full score vectors; Jaccard compares Top-$K$ sets. Same Monte Carlo protocol as Table~\ref{tab:predictive-overconfidence}.}
+\label{tab:overconfidence-kendall}
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{llccccccc}
+\toprule
+$\delta$ & Operator & $\tau$ mean & $\tau$ std & $\tau$ CI low & $\tau$ CI high & Jaccard mean & Jaccard CI low & Jaccard CI high \\
+\midrule
+\multirow{3}{*}{$0.00$} & $A_L$ (Linear) & 1.000 & 0.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+ & $A_G$ (Geometric) & 1.000 & 0.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+ & $A_M$ (Minimum) & 1.000 & 0.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+\midrule
+\multirow{3}{*}{$0.10$} & $A_L$ (Linear) & 0.897 & 0.003 & 0.891 & 0.904 & 0.596 & 0.493 & 0.739 \\
+ & $A_G$ (Geometric) & 0.971 & 0.002 & 0.966 & 0.975 & 0.993 & 0.961 & 1.000 \\
+ & $A_M$ (Minimum) & 0.998 & 0.001 & 0.996 & 0.999 & 1.000 & 1.000 & 1.000 \\
+\midrule
+\multirow{3}{*}{$0.20$} & $A_L$ (Linear) & 0.809 & 0.007 & 0.796 & 0.823 & 0.549 & 0.418 & 0.695 \\
+ & $A_G$ (Geometric) & 0.941 & 0.005 & 0.932 & 0.951 & 0.978 & 0.923 & 1.000 \\
+ & $A_M$ (Minimum) & 0.997 & 0.001 & 0.995 & 0.999 & 1.000 & 1.000 & 1.000 \\
+\midrule
+\multirow{3}{*}{$0.30$} & $A_L$ (Linear) & 0.736 & 0.010 & 0.717 & 0.757 & 0.499 & 0.399 & 0.600 \\
+ & $A_G$ (Geometric) & 0.914 & 0.007 & 0.900 & 0.928 & 0.962 & 0.869 & 1.000 \\
+ & $A_M$ (Minimum) & 0.997 & 0.001 & 0.995 & 0.999 & 1.000 & 1.000 & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}

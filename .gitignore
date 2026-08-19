@@ -246,9 +246,10 @@ __marimo__/
 !paper_final/Definitions/*-converted-to.*
 missfont.log
 
-# Matplotlib cache (experiments)
+# Matplotlib cache
 .mplconfig/
 experiments/.mplconfig/
+simulations/.mplconfig/
 
 # Monte Carlo aggregated summaries (regenerate with --refresh)
 experiments/.cache/

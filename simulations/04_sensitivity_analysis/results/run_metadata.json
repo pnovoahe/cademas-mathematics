@@ -1,0 +1,9 @@
+{
+  "experiment": "04_sensitivity_analysis",
+  "timestamp": "2026-08-18T08:22:19.642190+00:00",
+  "analyses": [
+    "lambda_perturbation",
+    "score_uncertainty",
+    "stability_summary"
+  ]
+}
