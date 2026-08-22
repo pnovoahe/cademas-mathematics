@@ -131,9 +131,8 @@ def apply_score_uncertainty(
 ) -> FloatArray:
     """Return R' = clip(R + ε, 0, 1) with ε ~ N(0, σ_R²). Unbiased noise.
 
-    Applied to all cases (unlike predictive overconfidence in Exp 02 which
-    targeted only contextually weak cases with a deterministic shift δ).
-    When ``sigma_r`` is zero, returns a copy of ``R`` unchanged.
+    Applied to all cases. When ``sigma_r`` is zero, returns a copy of ``R``
+    unchanged.
     """
     R_out = np.asarray(R, dtype=float).copy()
     if float(sigma_r) <= 0.0:

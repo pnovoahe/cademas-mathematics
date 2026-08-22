@@ -87,6 +87,27 @@ def kendall_tau(P_ref: FloatArray, P: FloatArray) -> float:
     return float(tau)
 
 
+def kendall_tau_top_k(
+    P_ref: FloatArray,
+    P: FloatArray,
+    K: int,
+    *,
+    R_ref: FloatArray | None = None,
+    R: FloatArray | None = None,
+    case_id: IntArray | None = None,
+) -> float:
+    """Kendall $\\tau$ on the union of the two Top-$K$ index sets."""
+    idx_ref = top_k_indices(P_ref, K, R=R_ref, case_id=case_id)
+    idx_new = top_k_indices(P, K, R=R, case_id=case_id)
+    idx = np.unique(np.concatenate([idx_ref, idx_new]))
+    if idx.size < 2:
+        return 1.0
+    return kendall_tau(
+        np.asarray(P_ref, dtype=float)[idx],
+        np.asarray(P, dtype=float)[idx],
+    )
+
+
 def topk_composition(
     Q_true: FloatArray,
     P: FloatArray,

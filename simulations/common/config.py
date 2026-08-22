@@ -96,49 +96,39 @@ LAMBDA_DENSE_VALUES: tuple[float, ...] = tuple(
 )
 
 # ---------------------------------------------------------------------------
-# Predictive overconfidence (Experiment 02 / Section 6.2)
+# Sensitivity analysis (Experiment 02) — Gaussian noise on R only
 # ---------------------------------------------------------------------------
-# Deterministic upward bias R' = clip(R + δ, 0, 1), applied only to
-# contextually weak cases with Q_i <= Q_WEAK_THRESHOLD (includes vetoes).
-DELTA_VALUES: tuple[float, ...] = (0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30)
-DELTA_TABLE_VALUES: tuple[float, ...] = (0.00, 0.10, 0.20, 0.30)
-Q_WEAK_THRESHOLD = 0.25
-OVERCONFIDENCE_LAMBDAS: tuple[float, ...] = LAMBDA_BAR_VALUES
-OVERCONFIDENCE_PRIMARY_LAMBDA = 0.75
-
-# ---------------------------------------------------------------------------
-# Contextual uncertainty (Experiment 03 / Section 6.3)
-# ---------------------------------------------------------------------------
-LAMBDA_ROBUSTNESS_VALUES: tuple[float, ...] = tuple(round(i * 0.1, 1) for i in range(11))
-
-SIGMA_Q_VALUES: tuple[float, ...] = (0.00, 0.05, 0.10, 0.15, 0.20)
-CONTEXT_NOISE_PRIMARY_LAMBDA = 0.75
-
-# Named population scenarios for Analysis 3 (population robustness).
-# Each scenario overrides baseline fields where specified.
-_BASE_POP: dict[str, object] = {
-    "veto_fraction": VETO_FRACTION,
-    "std_r_beta": STD_R_BETA,
-    "std_q_beta": STD_Q_BETA,
-    "veto_r_beta": VETO_R_BETA,
-}
-
-POPULATION_SCENARIOS: dict[str, dict[str, object]] = {
-    "baseline": dict(_BASE_POP),
-    "low_veto_frac": {**_BASE_POP, "veto_fraction": 0.05},
-    "high_veto_frac": {**_BASE_POP, "veto_fraction": 0.10},
-    "weak_heavy": {**_BASE_POP, "std_q_beta": (0.8, 2.0)},
-    "weak_sparse": {**_BASE_POP, "std_q_beta": (2.0, 8.0)},
-    "low_r_separation": {**_BASE_POP, "veto_r_beta": (4.0, 2.0)},
-    "high_r_overlap": {**_BASE_POP, "veto_r_beta": (3.0, 3.0)},
-}
-
-# ---------------------------------------------------------------------------
-# Sensitivity analysis (Experiment 04 / Section 6.4)
-# ---------------------------------------------------------------------------
+# Q is held fixed (same population design as Experiment 01). Predictive scores
+# are perturbed as R' = clip(R + ε, 0, 1), ε ~ N(0, σ_R²).
 SENSITIVITY_PRIMARY_LAMBDA: float = 0.75
-LAMBDA_PERTURBATION_VALUES: tuple[float, ...] = (0.70, 0.725, 0.75, 0.775, 0.80)
-SIGMA_R_VALUES: tuple[float, ...] = (0.00, 0.02, 0.05, 0.10, 0.20)
+SIGMA_R_VALUES: tuple[float, ...] = (0.00, 0.05, 0.10, 0.20)
+SIGMA_R_FIGURE_VALUES: tuple[float, ...] = (0.05, 0.10, 0.20)
+# Seven ranking configurations used for pairwise Top-K agreement heatmaps
+# (and Exp 01 panels f–g): A_L and A_G at three λ values, plus A_M.
+AGREEMENT_LAMBDA_VALUES: tuple[float, ...] = (0.10, 0.50, 0.90)
+# Barplot alpha: lightest at λ=0.10, most intense at λ=0.90.
+AGREEMENT_LAMBDA_ALPHAS: dict[float, float] = {
+    0.10: 0.40,
+    0.50: 0.70,
+    0.90: 1.00,
+}
+
+
+def agreement_operator_specs() -> tuple[tuple[str, str, float | None, str], ...]:
+    """Return ``(config_id, operator, lambda_or_None, tick_label)`` for 7 configs."""
+    specs: list[tuple[str, str, float | None, str]] = []
+    letter = {"linear": "L", "geometric": "G"}
+    for op in ("linear", "geometric"):
+        for lam in AGREEMENT_LAMBDA_VALUES:
+            cid = f"{op}@{lam:.2f}"
+            label = rf"$A_{{{letter[op]}}}({lam:.2g})$"
+            specs.append((cid, op, float(lam), label))
+    specs.append(("min", "min", None, r"$A_M$"))
+    return tuple(specs)
+
+
+# Kept for shared Top-K composition helpers (weak non-veto band).
+Q_WEAK_THRESHOLD = 0.25
 
 # ---------------------------------------------------------------------------
 # Figures (ported from experiments/plot_style.py and systemic_config.py)

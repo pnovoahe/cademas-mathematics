@@ -32,11 +32,11 @@ For each Monte Carlo replication:
 5. Compute $V$, $\mathrm{VPR}=1-V$, and predictive utility $\bar{R}$
    (the last two are stored for reuse; only $V$ is presented in Section 6.1).
 
-The manuscript uses two complementary views of $V$:
+The manuscript uses a single three-panel figure:
 
-- **Figure 6.** Grouped bars at $\lambda\in\{0.50,0.75,0.90\}$ (balanced,
-  prediction-dominant, strongly prediction-dominant).
-- **Figure 7.** Dense sweep $V(\lambda)$ on $[0,1]$, which shows the
+- **Panel (a).** Illustrative $(R,Q)$ scatter (trial~0).
+- **Panel (b).** Boxplots of $P_i$ by operator at $\lambda\in\{0.50,0.75,0.90\}$.
+- **Panel (c).** Dense sweep $V(\lambda)$ on $[0,1]$, which shows the
   transition from no violations to systematic violations.
 
 ## Parameters
@@ -84,9 +84,7 @@ python run.py --veto-fraction 0.10   # optional extra scenario; not used in the 
 - `results/aggregated_dense.csv` — mean, std, CI95% over the dense $\lambda$ grid
 - `results/aggregated_barplot.csv` — subset $\lambda\in\{0.50,0.75,0.90\}$
 - `results/run_metadata.json` — seeds, `veto_fraction`, fingerprint
-- `figures/policy_violation_rate_grouped.{pdf,png}` — Figure 6
-- `figures/policy_violation_rate_dense.{pdf,png}` — Figure 7
-- `tables/table_policy_compliance.tex` — Table 2 ($V$ only)
+- `figures/policy_compliance_overview.{pdf,png}` — Section 6.1 composite figure
 - `captions.md`
 - `manuscript_snippets.md`
 - `results_narrative.md`

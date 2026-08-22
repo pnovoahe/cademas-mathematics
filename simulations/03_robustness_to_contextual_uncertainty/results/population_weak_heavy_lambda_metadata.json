@@ -1,9 +1,0 @@
-{
-  "experiment": "03_robustness/population/weak_heavy/lambda",
-  "fingerprint": "4a22df0e5ed87118",
-  "timestamp_utc": "2026-08-17T23:21:08.966550+00:00",
-  "n_rows": 33000,
-  "scenario": "weak_heavy",
-  "sweep": "lambda",
-  "sigma_q": 0.0
-}

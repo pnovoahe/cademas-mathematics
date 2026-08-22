@@ -31,7 +31,7 @@ Each Monte Carlo replication generates $N=1000$ decision cases, of which a fract
 
 The first experiment evaluates the population-level consequences of the contextual-veto property established in Section~\ref{subsec:veto-preservation}. It is not a comparison of overall operator quality. The veto group is intentionally assigned high predictive scores in order to create the most challenging scenario for policy preservation, so that aggregation semantics can be evaluated when predictive evidence strongly conflicts with contextual constraints.
 
-Figure~\ref{fig:policy-violation-grouped} reports the policy violation rate $V$ at three representative integration regimes $\lambda\in\{0.50, 0.75, 0.90\}$. Contextual compliance is the complement $\mathrm{VPR}=1-V$ and is therefore omitted as a separate figure.
+Figure~\ref{fig:policy-violation} summarizes the experiment in three panels. Panel~(a) shows the adversarial $(R,Q)$ population; panel~(b) the resulting $P_i$ distributions by operator at $\lambda\in\{0.50, 0.75, 0.90\}$; panel~(c) the Monte Carlo mean $V(\lambda)$ sweep.
 
 At $\lambda=0.50$, the linear operator yields $V=0.000 (95% CI [0.000, 0.000])$. At $\lambda=0.75$, $V=0.077 (95% CI [0.020, 0.150])$. At $\lambda=0.90$, $V=0.462 (95% CI [0.370, 0.550])$. Thus linear aggregation does not always admit contextually excluded cases; violations emerge as predictive evidence receives more weight.
 
@@ -39,6 +39,6 @@ Under the same populations, the weighted geometric operator yields $V=0$ at all 
 
 The minimum operator likewise yields $V=0$ at these settings, again consistent with zero absorption rather than with a claim of overall superiority.
 
-Figure~\ref{fig:policy-violation-dense} shows $V$ as a function of $\lambda$ over $[0,1]$. This dense sweep makes the transition from no violations to systematic policy violations explicit.
+Panel~(c) of Figure~\ref{fig:policy-violation} shows $V$ as a function of $\lambda$ over $[0,1]$. This dense sweep makes the transition from no violations to systematic policy violations explicit.
  For the linear operator, the Monte Carlo mean of $V$ remains $0$ up to $\lambda=0.65$ and first becomes strictly positive at $\lambda=0.70$.
  Over the full sweep, the maximum Monte Carlo mean of $V$ is 0.000 for $A_G$ and 0.000 for $A_M$.

@@ -11,6 +11,7 @@ Aligned with first_round_v2/manuscriptR1V2.tex, Section 6.1.
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import os
 import sys
@@ -30,6 +31,7 @@ import pandas as pd
 
 from common.aggregators import aggregate  # noqa: E402
 from common.config import (  # noqa: E402
+    AGREEMENT_LAMBDA_VALUES,
     CI_LEVEL,
     LAMBDA_BAR_VALUES,
     LAMBDA_DENSE_VALUES,
@@ -45,16 +47,20 @@ from common.config import (  # noqa: E402
     VETO_FRACTION,
     VETO_FRACTIONS_SUPPORTED,
     VETO_R_BETA,
+    agreement_operator_specs,
     n_std_from_fraction,
     n_veto_from_fraction,
 )
-from common.generators import generate_population  # noqa: E402
-from common.metrics import policy_violation_rate, predictive_utility  # noqa: E402
+from common.generators import Population, generate_population  # noqa: E402
+from common.metrics import (  # noqa: E402
+    jaccard_top_k,
+    kendall_tau_top_k,
+    policy_violation_rate,
+    predictive_utility,
+)
 from common.plotting import (  # noqa: E402
-    grouped_bar_figure,
-    new_single_axes,
-    plot_line_mean_ci,
-    policy_violation_two_panel,
+    policy_compliance_operator_agreement,
+    policy_compliance_three_panel,
     save_figure,
 )
 from common.utils import (  # noqa: E402
@@ -65,10 +71,17 @@ from common.utils import (  # noqa: E402
     trial_seed,
     utc_now_iso,
     write_json,
-    write_latex_table,
 )
 
-METRICS = ("policy_violation_rate", "veto_preservation_rate", "predictive_utility")
+METRICS = (
+    "policy_violation_rate",
+    "veto_preservation_rate",
+    "predictive_utility",
+)
+PAIR_METRICS = ("kendall_tau", "jaccard_top_k")
+# Representative λ values for the Section 6.1 overview panels (a)/(b).
+FIGURE_LAMBDA_VALUES: tuple[float, ...] = AGREEMENT_LAMBDA_VALUES
+AGREEMENT_SPECS = agreement_operator_specs()
 OPERATOR_TEX = {
     "linear": r"$A_L$ (Linear)",
     "geometric": r"$A_G$ (Geometric)",
@@ -112,15 +125,20 @@ def _fingerprint(settings: RunSettings) -> str:
             "seeds": SEEDS,
             "lambda_dense": list(LAMBDA_DENSE_VALUES),
             "lambda_bar": list(LAMBDA_BAR_VALUES),
+            "agreement_configs": [s[0] for s in AGREEMENT_SPECS],
             "std_r_beta": STD_R_BETA,
             "std_q_beta": STD_Q_BETA,
             "veto_r_beta": VETO_R_BETA,
             "operators": list(OPERATORS),
+            "metrics": list(METRICS),
+            "pairs": "lower_triangle_7configs",
         },
     )
 
 
-def _run_trial(trial_idx: int, settings: RunSettings) -> list[dict]:
+def _run_trial(
+    trial_idx: int, settings: RunSettings
+) -> tuple[list[dict], list[dict]]:
     rng = np.random.default_rng(trial_seed(trial_idx))
     pop = generate_population(rng, n_std=settings.n_std, n_veto=settings.n_veto)
     records: list[dict] = []
@@ -142,37 +160,77 @@ def _run_trial(trial_idx: int, settings: RunSettings) -> list[dict]:
                     ),
                 }
             )
-    return records
+
+    p_cfg = {
+        cid: aggregate(op, pop.R, pop.Q, 0.0 if lam is None else float(lam))
+        for cid, op, lam, _ in AGREEMENT_SPECS
+    }
+    order = {cid: i for i, (cid, *_r) in enumerate(AGREEMENT_SPECS)}
+    pair_rows: list[dict] = []
+    for (cid_a, *_), (cid_b, *__) in itertools.combinations(AGREEMENT_SPECS, 2):
+        # Orient so row index > col index (lower triangle).
+        a, b = cid_a, cid_b
+        if order[a] < order[b]:
+            a, b = b, a
+        Pa, Pb = p_cfg[a], p_cfg[b]
+        pair_rows.append(
+            {
+                "trial": trial_idx,
+                "seed": trial_seed(trial_idx),
+                "operator_a": a,
+                "operator_b": b,
+                "kendall_tau": kendall_tau_top_k(
+                    Pa, Pb, TOP_K, R_ref=pop.R, R=pop.R, case_id=pop.case_id
+                ),
+                "jaccard_top_k": jaccard_top_k(
+                    Pa, Pb, TOP_K, R_ref=pop.R, R=pop.R, case_id=pop.case_id
+                ),
+            }
+        )
+    return records, pair_rows
 
 
-def run_monte_carlo(settings: RunSettings, results_dir: Path) -> pd.DataFrame:
+def run_monte_carlo(
+    settings: RunSettings, results_dir: Path
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     raw_path = results_dir / "trials_raw.csv"
+    pairs_path = results_dir / "trials_pairs.csv"
     meta_path = results_dir / "run_metadata.json"
     fingerprint = _fingerprint(settings)
 
-    if raw_path.exists() and meta_path.exists() and not settings.refresh:
+    if (
+        raw_path.exists()
+        and pairs_path.exists()
+        and meta_path.exists()
+        and not settings.refresh
+    ):
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         if meta.get("fingerprint") == fingerprint:
             print(f"[cache] loaded {raw_path} ({meta.get('n_rows')} rows)")
-            return pd.read_csv(raw_path)
+            return pd.read_csv(raw_path), pd.read_csv(pairs_path)
 
     records: list[dict] = []
+    pair_records: list[dict] = []
     for trial_idx in range(N_MONTE_CARLO):
-        records.extend(_run_trial(trial_idx, settings))
+        rows, pairs = _run_trial(trial_idx, settings)
+        records.extend(rows)
+        pair_records.extend(pairs)
         if (trial_idx + 1) % 100 == 0 or trial_idx == 0:
             print(f"[mc] trial {trial_idx + 1}/{N_MONTE_CARLO}")
 
     raw = pd.DataFrame.from_records(records)
+    pairs = pd.DataFrame.from_records(pair_records)
     raw.to_csv(raw_path, index=False)
+    pairs.to_csv(pairs_path, index=False)
     write_json(
         meta_path,
         {
             "experiment": "01_policy_compliance_under_contextual_vetoes",
-            "manuscript": "first_round_v2/manuscriptR1V2.tex",
-            "subsection": "6.1 Policy Compliance under Contextual Vetoes",
+            "manuscript": "first_round_v3/manuscriptR1V3.tex",
             "fingerprint": fingerprint,
             "timestamp_utc": utc_now_iso(),
             "n_rows": int(len(raw)),
+            "n_rows_pairs": int(len(pairs)),
             "n_monte_carlo": N_MONTE_CARLO,
             "seeds": SEEDS,
             "seed_base": MC_SEED_BASE,
@@ -183,6 +241,7 @@ def run_monte_carlo(settings: RunSettings, results_dir: Path) -> pd.DataFrame:
             "top_k": TOP_K,
             "lambda_dense": list(LAMBDA_DENSE_VALUES),
             "lambda_bar": list(LAMBDA_BAR_VALUES),
+            "agreement_configs": [s[0] for s in AGREEMENT_SPECS],
             "std_r_beta": STD_R_BETA,
             "std_q_beta": STD_Q_BETA,
             "veto_r_beta": VETO_R_BETA,
@@ -191,7 +250,8 @@ def run_monte_carlo(settings: RunSettings, results_dir: Path) -> pd.DataFrame:
         },
     )
     print(f"[mc] wrote {raw_path} ({len(raw)} rows)")
-    return raw
+    print(f"[mc] wrote {pairs_path} ({len(pairs)} rows)")
+    return raw, pairs
 
 
 def _order_operators(df: pd.DataFrame) -> pd.DataFrame:
@@ -226,88 +286,61 @@ def _linear_onset(dense_df: pd.DataFrame) -> float | None:
     return float(positive["lambda"].iloc[0])
 
 
-def write_table(bar_df: pd.DataFrame, tables_dir: Path, settings: RunSettings) -> Path:
-    table_df = bar_df.copy()
-    table_df["operator_tex"] = table_df["operator"].map(OPERATOR_TEX)
-    table_df["lambda_tex"] = table_df["lambda"].map(lambda x: rf"${x:.2f}$")
-    op_rank = {name: i for i, name in enumerate(OPERATORS)}
-    table_df["_op"] = table_df["operator"].map(op_rank)
-    table_df = table_df.sort_values(["lambda", "_op"]).drop(columns="_op")
-    path = tables_dir / "table_policy_compliance.tex"
-    write_latex_table(
-        table_df,
-        path,
-        columns=(
-            ("lambda_tex", r"$\lambda$"),
-            ("operator_tex", "Operator"),
-            ("policy_violation_rate_mean", r"$V$ mean"),
-            ("policy_violation_rate_std", r"$V$ std"),
-            ("policy_violation_rate_ci_low", r"$V$ CI low"),
-            ("policy_violation_rate_ci_high", r"$V$ CI high"),
-        ),
-        group_column="lambda_tex",
-        col_spec="lccccc",
-        caption=(
-            r"Policy violation rate $V$ under contextual vetoes. Values are Monte Carlo "
-            rf"means, standard deviations, and {int(CI_LEVEL * 100)}\% percentile "
-            rf"confidence intervals over {N_MONTE_CARLO} replications "
-            rf"($N={N_CASES}$, $K={TOP_K}$, veto fraction ${settings.veto_fraction:.2f}$)."
-        ),
-        label="tab:policy-compliance",
+def build_illustrative_scores(
+    settings: RunSettings,
+    *,
+    lambda_values: tuple[float, ...] | list[float] = FIGURE_LAMBDA_VALUES,
+) -> tuple[Population, dict[tuple[str, float], np.ndarray]]:
+    """Single trial-0 population and $P_i$ vectors for panels (a) and (b)."""
+    rng = np.random.default_rng(trial_seed(0))
+    pop = generate_population(rng, n_std=settings.n_std, n_veto=settings.n_veto)
+    p_data: dict[tuple[str, float], np.ndarray] = {}
+    for lam in lambda_values:
+        for operator in OPERATORS:
+            p_data[(operator, lam)] = aggregate(operator, pop.R, pop.Q, lam)
+    return pop, p_data
+
+
+def _remove_legacy_figures(figures_dir: Path) -> None:
+    legacy_names = (
+        "policy_violation_rate",
+        "policy_violation_rate_grouped",
+        "policy_violation_rate_dense",
+        *VPR_FIGURE_STEMS,
     )
-    return path
+    for name in legacy_names:
+        for suffix in (".pdf", ".png", ".svg"):
+            path = figures_dir / f"{Path(name).stem}{suffix}"
+            if path.exists():
+                path.unlink()
+                print(f"[fig] removed {path}")
 
 
-def _remove_vpr_figures(figures_dir: Path) -> None:
-    for name in VPR_FIGURE_STEMS:
-        path = figures_dir / name
-        if path.exists():
-            path.unlink()
-            print(f"[fig] removed {path}")
-
-
-def write_figures(bar_df: pd.DataFrame, dense_df: pd.DataFrame, figures_dir: Path) -> list[Path]:
-    _remove_vpr_figures(figures_dir)
-    written: list[Path] = []
-    written.extend(
-        policy_violation_two_panel(
-            bar_df,
-            dense_df,
-            path_stem=figures_dir / "policy_violation_rate",
-            x_values=LAMBDA_BAR_VALUES,
+def write_figures(
+    dense_df: pd.DataFrame,
+    agreement_pairs: pd.DataFrame,
+    figures_dir: Path,
+    settings: RunSettings,
+) -> list[Path]:
+    _remove_legacy_figures(figures_dir)
+    pop, p_data = build_illustrative_scores(settings, lambda_values=FIGURE_LAMBDA_VALUES)
+    paths = policy_compliance_three_panel(
+        R=pop.R,
+        Q=pop.Q,
+        is_veto=pop.is_veto,
+        case_id=pop.case_id,
+        p_data=p_data,
+        dense_df=dense_df,
+        path_stem=figures_dir / "policy_compliance_overview",
+        lambda_values=FIGURE_LAMBDA_VALUES,
+    )
+    paths.extend(
+        policy_compliance_operator_agreement(
+            agreement_pairs=agreement_pairs,
+            path_stem=figures_dir / "policy_compliance_operator_agreement",
         )
     )
-    written.extend(
-        grouped_bar_figure(
-            bar_df,
-            y_col="policy_violation_rate_mean",
-            ci_low_col="policy_violation_rate_ci_low",
-            ci_high_col="policy_violation_rate_ci_high",
-            ylabel=r"Policy violation rate $V$",
-            xlabel=r"Trade-off parameter $\lambda$",
-            x_values=LAMBDA_BAR_VALUES,
-            path_stem=figures_dir / "policy_violation_rate_grouped",
-            ylim=(0.0, 1.0),
-        )
-    )
-    fig, ax = new_single_axes()
-    plot_line_mean_ci(
-        ax,
-        dense_df,
-        x_col="lambda",
-        group_col="operator",
-        y_col="policy_violation_rate_mean",
-        ci_low_col="policy_violation_rate_ci_low",
-        ci_high_col="policy_violation_rate_ci_high",
-        group_labels=OPERATOR_FULL_LABELS,
-        xlabel=r"Trade-off parameter $\lambda$",
-        ylabel=r"Policy violation rate $V$",
-        ylim=(-0.08, 1.0),
-    )
-    ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
-    fig.tight_layout()
-    written.extend(save_figure(fig, figures_dir / "policy_violation_rate_dense"))
-    return written
+    return paths
 
 
 def _v_sentence(row: pd.Series) -> str:
@@ -400,11 +433,11 @@ def write_snippets(
         "be evaluated when predictive evidence strongly conflicts with "
         "contextual constraints.",
         "",
-        "Figure~\\ref{fig:policy-violation-grouped} reports the policy "
-        "violation rate $V$ at three representative integration regimes "
-        f"$\\lambda\\in\\{{{', '.join(f'{x:.2f}' for x in LAMBDA_BAR_VALUES)}\\}}$. "
-        "Contextual compliance is the complement $\\mathrm{VPR}=1-V$ and is "
-        "therefore omitted as a separate figure.",
+        "Figure~\\ref{fig:policy-violation} summarizes the experiment in three panels. "
+        "Panel~(a) shows the adversarial $(R,Q)$ population; panel~(b) the "
+        "resulting $P_i$ distributions by operator at "
+        f"$\\lambda\\in\\{{{', '.join(f'{x:.2f}' for x in LAMBDA_BAR_VALUES)}\\}}$; "
+        "panel~(c) the Monte Carlo mean $V(\\lambda)$ sweep.",
         "",
         (
             f"At $\\lambda=0.50$, the linear operator yields $V={_v_sentence(linear_050)}$. "
@@ -430,7 +463,7 @@ def write_snippets(
         )
     paragraphs.append("")
     paragraphs.append(
-        "Figure~\\ref{fig:policy-violation-dense} shows $V$ as a function of "
+        "Panel~(c) of Figure~\\ref{fig:policy-violation} shows $V$ as a function of "
         "$\\lambda$ over $[0,1]$. This dense sweep makes the transition from "
         "no violations to systematic policy violations explicit."
     )
@@ -452,48 +485,21 @@ def write_snippets(
     captions = [
         "# Captions (Section 6.1)",
         "",
-        "## Figure 6: policy_violation_rate_grouped",
+        "## Figure: policy_compliance_overview",
         "",
         (
-            f"Policy violation rate $V$ under contextual vetoes for linear ($A_L$), "
-            f"weighted geometric ($A_G$), and minimum ($A_M$) aggregation at "
-            f"$\\lambda\\in\\{{{', '.join(f'{x:.2f}' for x in LAMBDA_BAR_VALUES)}\\}}$, "
-            "corresponding to balanced, prediction-dominant, and strongly "
-            "prediction-dominant integration. Bars show Monte Carlo means over "
-            f"{N_MONTE_CARLO} replications ($N={N_CASES}$, $K={TOP_K}$, "
-            f"veto fraction ${settings.veto_fraction:.2f}$). "
-            "Error bars denote 95\\% percentile confidence intervals. "
-            "The veto group is assigned high predictive scores "
-            f"$R_i\\sim\\mathrm{{Beta}}{VETO_R_BETA}$, so prediction conflicts "
-            "with $Q_i=0$. Contextual compliance is $\\mathrm{VPR}=1-V$."
+            f"Policy compliance under contextual vetoes ($N={N_CASES}$, $K={TOP_K}$, "
+            f"$1000$ Monte Carlo replications, veto fraction ${settings.veto_fraction:.2f}$). "
+            "(\\textbf{a}) Illustrative synthetic population (trial~0): $R$ vs.\\ $Q$ "
+            "with $Q_i=0$ and high $R_i$. "
+            "(\\textbf{b}) Boxplots of aggregated scores $P_i$ at "
+            f"$\\lambda\\in\\{{{', '.join(f'{x:.2f}' for x in LAMBDA_BAR_VALUES)}\\}}$; "
+            "operators are distinguished by colour. "
+            "(\\textbf{c}) Policy violation rate $V(\\lambda)$; curves are Monte Carlo "
+            f"means and shaded bands are {int(CI_LEVEL * 100)}\\% percentile intervals."
         ),
         "",
-        r"Suggested LaTeX label: \label{fig:policy-violation-grouped}",
-        "",
-        "## Figure 7: policy_violation_rate_dense",
-        "",
-        (
-            f"Policy violation rate $V$ as a function of $\\lambda\\in[0,1]$ "
-            f"(step $1/{len(LAMBDA_DENSE_VALUES)-1}$). Solid curves are Monte Carlo "
-            f"means over {N_MONTE_CARLO} replications; shaded bands are 95\\% "
-            "percentile confidence intervals. The figure shows the emergence of "
-            "policy violations under linear aggregation as predictive evidence "
-            "receives more weight; $A_G$ and $A_M$ remain at $V=0$ throughout "
-            "the sweep in this experiment."
-        ),
-        "",
-        r"Suggested LaTeX label: \label{fig:policy-violation-dense}",
-        "",
-        "## Table 2: table_policy_compliance.tex",
-        "",
-        (
-            f"Monte Carlo mean, standard deviation, and 95\\% percentile confidence "
-            f"interval of $V$ for each operator at "
-            f"$\\lambda\\in\\{{{', '.join(f'{x:.2f}' for x in LAMBDA_BAR_VALUES)}\\}}$. "
-            r"Contextual compliance $\mathrm{VPR}=1-V$ is omitted as redundant."
-        ),
-        "",
-        r"Suggested LaTeX label: \label{tab:policy-compliance}",
+        r"Suggested LaTeX label: \label{fig:policy-violation}",
         "",
     ]
     (exp_dir / "captions.md").write_text("\n".join(captions), encoding="utf-8")
@@ -580,11 +586,11 @@ For each Monte Carlo replication:
 5. Compute $V$, $\\mathrm{{VPR}}=1-V$, and predictive utility $\\bar{{R}}$
    (the last two are stored for reuse; only $V$ is presented in Section 6.1).
 
-The manuscript uses two complementary views of $V$:
+The manuscript uses a single three-panel figure:
 
-- **Figure 6.** Grouped bars at $\\lambda\\in\\{{0.50,0.75,0.90\\}}$ (balanced,
-  prediction-dominant, strongly prediction-dominant).
-- **Figure 7.** Dense sweep $V(\\lambda)$ on $[0,1]$, which shows the
+- **Panel (a).** Illustrative $(R,Q)$ scatter (trial~0).
+- **Panel (b).** Boxplots of $P_i$ by operator at $\\lambda\\in\\{{0.50,0.75,0.90\\}}$.
+- **Panel (c).** Dense sweep $V(\\lambda)$ on $[0,1]$, which shows the
   transition from no violations to systematic violations.
 
 ## Parameters
@@ -632,9 +638,7 @@ python run.py --veto-fraction 0.10   # optional extra scenario; not used in the 
 - `results/aggregated_dense.csv` — mean, std, CI95% over the dense $\\lambda$ grid
 - `results/aggregated_barplot.csv` — subset $\\lambda\\in\\{{0.50,0.75,0.90\\}}$
 - `results/run_metadata.json` — seeds, `veto_fraction`, fingerprint
-- `figures/policy_violation_rate_grouped.{{pdf,png}}` — Figure 6
-- `figures/policy_violation_rate_dense.{{pdf,png}}` — Figure 7
-- `tables/table_policy_compliance.tex` — Table 2 ($V$ only)
+- `figures/policy_compliance_overview.{{pdf,png}}` — Section 6.1 composite figure
 - `captions.md`
 - `manuscript_snippets.md`
 - `results_narrative.md`
@@ -831,7 +835,7 @@ def main() -> None:
     args = parse_args()
     settings = _settings_from_args(args)
     paths = ensure_dirs(EXP_DIR)
-    raw = run_monte_carlo(settings, results_dir=paths["results"])
+    raw, pairs = run_monte_carlo(settings, results_dir=paths["results"])
     dense = summarize_trials(raw, ["lambda", "operator"], METRICS)
     dense = _order_operators(dense)
     dense_path = paths["results"] / "aggregated_dense.csv"
@@ -839,14 +843,18 @@ def main() -> None:
     bar = _subset_bar_values(dense)
     bar_path = paths["results"] / "aggregated_barplot.csv"
     bar.to_csv(bar_path, index=False)
+    agg_pairs = summarize_trials(
+        pairs, group_cols=("operator_a", "operator_b"), metrics=PAIR_METRICS
+    )
+    agg_pairs_path = paths["results"] / "aggregated_pairs.csv"
+    agg_pairs.to_csv(agg_pairs_path, index=False)
     print(f"[agg] wrote {dense_path} ({len(dense)} rows)")
     print(f"[agg] wrote {bar_path} ({len(bar)} rows)")
+    print(f"[agg] wrote {agg_pairs_path} ({len(agg_pairs)} rows)")
 
-    figures = write_figures(bar, dense, paths["figures"])
+    figures = write_figures(dense, agg_pairs, paths["figures"], settings)
     for path in figures:
         print(f"[fig] {path}")
-    table_path = write_table(bar, paths["tables"], settings)
-    print(f"[tex] {table_path}")
     write_snippets(bar, dense, EXP_DIR, settings)
     write_readme(bar, dense, EXP_DIR, settings)
     write_narrative(bar, dense, EXP_DIR, settings)

@@ -1,9 +1,0 @@
-{
-  "experiment": "03_robustness/population/low_r_separation/sigma",
-  "fingerprint": "a9da0a977f0c48e6",
-  "timestamp_utc": "2026-08-17T23:22:31.145202+00:00",
-  "n_rows": 15000,
-  "scenario": "low_r_separation",
-  "sweep": "sigma_q",
-  "lambda": 0.75
-}

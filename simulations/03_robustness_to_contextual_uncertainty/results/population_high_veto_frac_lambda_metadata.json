@@ -1,9 +1,0 @@
-{
-  "experiment": "03_robustness/population/high_veto_frac/lambda",
-  "fingerprint": "5bb3dc30862934ab",
-  "timestamp_utc": "2026-08-17T23:20:33.746618+00:00",
-  "n_rows": 33000,
-  "scenario": "high_veto_frac",
-  "sweep": "lambda",
-  "sigma_q": 0.0
-}
