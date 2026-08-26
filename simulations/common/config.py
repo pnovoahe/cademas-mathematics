@@ -103,6 +103,9 @@ LAMBDA_DENSE_VALUES: tuple[float, ...] = tuple(
 SENSITIVITY_PRIMARY_LAMBDA: float = 0.75
 SIGMA_R_VALUES: tuple[float, ...] = (0.00, 0.05, 0.10, 0.20)
 SIGMA_R_FIGURE_VALUES: tuple[float, ...] = (0.05, 0.10, 0.20)
+SIGMA_R_V_BY_K_VALUES: tuple[float, ...] = (0.00, 0.05, 0.10, 0.20)
+# Policy-violation sweep over selection size for Exp 02 (V vs K figure).
+TOP_K_SWEEP_VALUES: tuple[int, ...] = tuple(range(10, TOP_K + 1, 10))
 # Seven ranking configurations used for pairwise Top-K agreement heatmaps
 # (and Exp 01 panels f–g): A_L and A_G at three λ values, plus A_M.
 AGREEMENT_LAMBDA_VALUES: tuple[float, ...] = (0.10, 0.50, 0.90)
@@ -112,6 +115,13 @@ AGREEMENT_LAMBDA_ALPHAS: dict[float, float] = {
     0.50: 0.70,
     0.90: 1.00,
 }
+# Line-plot marker scale: largest at λ=0.10, decreasing toward A_M.
+AGREEMENT_LAMBDA_MARKER_SCALES: dict[float, float] = {
+    0.10: 1.22,
+    0.50: 1.00,
+    0.90: 0.82,
+}
+AGREEMENT_MIN_MARKER_SCALE: float = 0.68
 
 
 def agreement_operator_specs() -> tuple[tuple[str, str, float | None, str], ...]:

@@ -1,0 +1,85 @@
+{
+  "cw_StackedEnsemble_BestOfFamily_4_AutoML_1_20260118_132607.zip": {
+    "department": "Culture and Wellbeing",
+    "features": [
+      "age",
+      "gender",
+      "department",
+      "job_role",
+      "job_level",
+      "environment_satisfaction",
+      "job_involvement",
+      "job_satisfaction",
+      "relationship_satisfaction",
+      "work_life_balance",
+      "over_time",
+      "business_travel"
+    ],
+    "performance": {
+      "auc": 0.9941112661,
+      "aucpr": 0.9973025891
+    }
+  },
+  "fin_StackedEnsemble_BestOfFamily_4_AutoML_2_20260118_150802.zip": {
+    "department": "Finance",
+    "features": [
+      "age",
+      "gender",
+      "department",
+      "job_role",
+      "job_level",
+      "monthly_income",
+      "monthly_rate",
+      "daily_rate",
+      "hourly_rate",
+      "percent_salary_hike",
+      "stock_option_level"
+    ],
+    "performance": {
+      "auc": 0.9971767363,
+      "aucpr": 0.9982972919
+    }
+  },
+  "od_GBM_grid_1_AutoML_3_20260118_163705_model_26.zip": {
+    "department": "Operations and Development",
+    "features": [
+      "age",
+      "gender",
+      "department",
+      "job_role",
+      "job_level",
+      "total_working_years",
+      "num_companies_worked",
+      "years_at_company",
+      "years_in_current_role",
+      "years_since_last_promotion",
+      "years_with_curr_manager",
+      "performance_rating",
+      "training_times_last_year"
+    ],
+    "performance": {
+      "auc": 0.8021537469,
+      "aucpr": 0.7843516565
+    }
+  },
+  "hr_StackedEnsemble_BestOfFamily_4_AutoML_2_20260119_90304.zip": {
+    "department": "Human Resources",
+    "features": [
+      "age",
+      "gender",
+      "department",
+      "job_role",
+      "job_level",
+      "marital_status",
+      "over_18",
+      "education",
+      "education_field",
+      "distance_from_home",
+      "standard_hours"
+    ],
+    "performance": {
+      "auc": 0.9968357713,
+      "aucpr": 9973025891
+    }
+  }
+}

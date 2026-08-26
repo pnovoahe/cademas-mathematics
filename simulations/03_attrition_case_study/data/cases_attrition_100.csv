@@ -1,0 +1,101 @@
+Case_ID;attrition;age;business_travel;daily_rate;department;distance_from_home;education;education_field;employee_count;employee_number;environment_satisfaction;gender;hourly_rate;job_involvement;job_level;job_role;job_satisfaction;marital_status;monthly_income;monthly_rate;num_companies_worked;over18;over_time;percent_salary_hike;performance_rating;relationship_satisfaction;standard_hours;stock_option_level;total_working_years;training_times_last_year;work_life_balance;years_at_company;years_in_current_role;years_since_last_promotion;years_with_curr_manager
+Emma Smith;No;32;Travel_Rarely;906;Sales;7;3;Life Sciences;1;420;4;Male;91;2;2;Sales Executive;3;Married;5484;16985;1;Y;No;14;3;3;80;1;13;3;2;13;8;4;8
+Liam Clark;No;28;Travel_Rarely;995;Research & Development;9;3;Medical;1;930;3;Female;77;3;1;Research Scientist;3;Divorced;2377;9834;5;Y;No;18;3;2;80;1;6;2;3;2;2;2;2
+Olivia Johnson;No;47;Travel_Rarely;571;Sales;14;3;Medical;1;1503;3;Female;78;3;2;Sales Executive;3;Married;4591;24200;3;Y;Yes;17;3;3;80;1;11;4;2;5;4;1;2
+Noah Lewis;No;37;Travel_Rarely;482;Research & Development;3;3;Other;1;689;3;Male;36;3;3;Manufacturing Director;3;Married;9434;9606;1;Y;No;15;3;3;80;1;10;2;3;10;7;7;8
+Ava Williams;No;26;Travel_Rarely;991;Research & Development;6;3;Life Sciences;1;686;3;Female;71;3;1;Laboratory Technician;4;Married;2659;17759;1;Y;Yes;13;3;3;80;1;3;2;3;3;2;0;2
+Oliver Walker;No;35;Travel_Rarely;950;Research & Development;7;3;Other;1;845;3;Male;59;3;3;Manufacturing Director;3;Single;10221;18869;3;Y;No;21;4;2;80;0;17;3;4;8;5;1;6
+Sophia Brown;No;38;Travel_Frequently;888;Human Resources;10;4;Human Resources;1;1563;3;Male;71;3;2;Human Resources;3;Married;6077;14814;3;Y;No;11;3;3;80;0;10;2;3;6;3;1;2
+James Hall;No;36;Travel_Rarely;913;Research & Development;9;2;Medical;1;699;2;Male;48;2;2;Manufacturing Director;2;Divorced;8847;13934;2;Y;Yes;11;3;3;80;1;13;2;3;3;2;0;2
+Mia Jones;No;43;Travel_Rarely;982;Research & Development;12;3;Life Sciences;1;520;1;Male;59;2;4;Research Director;2;Divorced;14336;4345;1;Y;No;11;3;3;80;1;25;3;3;25;10;3;9
+Elijah Allen;No;50;Travel_Rarely;691;Research & Development;2;3;Medical;1;815;3;Male;64;3;4;Research Director;3;Married;17639;6881;5;Y;No;16;3;4;80;0;30;3;3;4;3;0;3
+Charlotte Miller;Yes;36;Travel_Rarely;660;Research & Development;15;3;Other;1;1052;1;Male;81;3;2;Laboratory Technician;3;Divorced;4834;7858;7;Y;No;14;3;2;80;1;9;3;2;1;0;0;0
+William Young;Yes;28;Travel_Rarely;890;Research & Development;2;4;Medical;1;828;3;Male;46;3;1;Research Scientist;3;Single;4382;16374;6;Y;No;17;3;4;80;0;5;3;2;2;2;2;1
+Amelia Davis;Yes;52;Travel_Rarely;1030;Sales;5;3;Life Sciences;1;1319;2;Male;64;3;3;Sales Executive;2;Single;8446;21534;9;Y;Yes;19;3;3;80;0;10;2;2;8;7;7;7
+Henry King;Yes;20;Travel_Frequently;769;Sales;9;3;Marketing;1;1077;4;Female;54;3;1;Sales Representative;4;Single;2323;17205;1;Y;Yes;14;3;2;80;0;2;3;3;2;2;0;2
+Harper Wilson;Yes;29;Travel_Rarely;428;Sales;9;3;Marketing;1;1752;2;Female;52;1;1;Sales Representative;2;Single;2760;14630;1;Y;No;13;3;3;80;0;2;3;3;2;2;2;2
+Lucas Wright;Yes;33;Travel_Rarely;1017;Research & Development;25;3;Medical;1;1108;1;Male;55;2;1;Research Scientist;2;Single;2313;2993;4;Y;Yes;20;4;2;80;0;5;0;3;2;2;2;2
+Evelyn Taylor;Yes;35;Travel_Rarely;303;Sales;27;3;Life Sciences;1;1797;3;Male;84;3;2;Sales Executive;4;Single;5813;13492;1;Y;Yes;18;3;4;80;0;10;2;3;10;7;7;7
+Benjamin Scott;Yes;37;Travel_Rarely;807;Human Resources;6;4;Human Resources;1;133;3;Male;63;3;1;Human Resources;1;Divorced;2073;23648;4;Y;Yes;22;4;4;80;0;7;3;3;3;2;0;2
+Abigail Anderson;Yes;18;Travel_Frequently;1306;Sales;5;3;Marketing;1;614;2;Male;69;3;1;Sales Representative;2;Single;1878;8059;1;Y;Yes;14;3;4;80;0;0;3;3;0;0;0;0
+Theodore Adams;Yes;41;Travel_Rarely;1360;Research & Development;12;3;Technical Degree;1;58;2;Female;49;3;5;Research Director;3;Married;19545;16280;1;Y;No;12;3;4;80;0;23;0;3;22;15;15;8
+Nicole Bailey;Yes;35;Travel_Rarely;556;Research & Development;23;2;Life Sciences;1;2000;2;Male;50;2;2;Manufacturing Director;3;Married;5916;15497;3;Y;Yes;13;3;1;80;0;8;1;3;1;0;0;1
+Camila Phillips;Yes;19;Travel_Rarely;419;Sales;21;3;Other;1;2001;4;Male;37;2;1;Sales Representative;2;Single;2121;9947;1;Y;Yes;13;3;2;80;0;1;3;4;1;0;0;0
+Paul Russell;Yes;58;Travel_Rarely;601;Research & Development;7;4;Medical;1;2002;3;Female;53;2;3;Manufacturing Director;1;Married;10008;12023;7;Y;Yes;14;3;4;80;0;31;0;2;10;9;5;9
+Christian Wood;Yes;42;Travel_Frequently;481;Sales;12;3;Life Sciences;1;2003;3;Male;44;3;4;Sales Executive;1;Single;13758;2447;0;Y;Yes;12;3;2;80;0;22;2;2;21;9;13;14
+Sarah Jenkins;Yes;29;Travel_Frequently;746;Sales;24;3;Technical Degree;1;2004;3;Male;45;4;1;Sales Representative;1;Single;1091;10642;1;Y;No;17;3;4;80;0;1;3;3;1;0;0;0
+Maria Foster;Yes;28;Travel_Frequently;1496;Sales;1;3;Technical Degree;1;2005;1;Male;92;3;1;Sales Representative;3;Married;2909;15747;3;Y;No;15;3;4;80;1;5;3;4;3;2;1;2
+Edward Allen;Yes;20;Travel_Rarely;1097;Research & Development;11;3;Medical;1;2006;4;Female;98;2;1;Research Scientist;1;Single;2600;18275;1;Y;Yes;15;3;1;80;0;1;2;3;1;0;0;0
+Jason Phillips;Yes;33;Travel_Rarely;587;Research & Development;10;1;Medical;1;2007;1;Male;38;1;1;Laboratory Technician;4;Divorced;3408;6705;7;Y;No;13;3;1;80;3;8;2;3;4;3;1;3
+Oscar Hall;Yes;30;Travel_Frequently;109;Research & Development;5;3;Medical;1;2008;2;Female;60;3;1;Laboratory Technician;2;Single;2422;25725;0;Y;No;17;3;1;80;0;4;3;3;3;2;1;2
+David Lewis;Yes;23;Travel_Rarely;427;Sales;7;3;Life Sciences;1;2009;3;Male;99;3;1;Sales Representative;4;Divorced;2275;25103;1;Y;Yes;21;4;2;80;1;3;2;3;3;2;0;2
+Emily Gonzalez;Yes;44;Travel_Frequently;920;Research & Development;24;3;Life Sciences;1;2010;4;Male;43;3;1;Laboratory Technician;3;Divorced;3161;19920;3;Y;Yes;22;4;4;80;1;19;0;1;1;0;0;0
+Michael Davis;Yes;31;Travel_Rarely;1365;Sales;13;4;Medical;1;2011;2;Male;46;3;2;Sales Executive;1;Divorced;4233;11512;2;Y;No;17;3;3;80;0;9;2;1;3;1;1;2
+Jordan Bailey;Yes;35;Travel_Frequently;130;Research & Development;25;4;Life Sciences;1;2012;4;Female;96;3;1;Research Scientist;2;Divorced;2022;16612;1;Y;Yes;19;3;1;80;1;10;3;2;10;2;7;8
+Madison Foster;Yes;29;Travel_Rarely;121;Sales;27;3;Marketing;1;2013;2;Female;35;3;3;Sales Executive;4;Married;7639;24525;1;Y;No;22;4;4;80;3;10;3;2;10;4;1;9
+Ian Fisher;Yes;25;Travel_Rarely;240;Sales;5;3;Marketing;1;2014;3;Male;46;2;2;Sales Executive;3;Single;5744;26959;1;Y;Yes;11;3;4;80;0;6;1;3;6;4;0;3
+Leah Cooper;Yes;28;Travel_Rarely;654;Research & Development;1;2;Life Sciences;1;2015;1;Female;67;1;1;Research Scientist;2;Single;2216;3872;7;Y;Yes;13;3;4;80;0;10;4;3;7;7;3;7
+Tyler Howard;Yes;24;Travel_Frequently;1287;Research & Development;7;3;Life Sciences;1;2016;1;Female;55;3;1;Laboratory Technician;3;Married;2886;14168;1;Y;Yes;16;3;4;80;1;6;4;3;6;3;1;2
+Faith Baker;Yes;32;Travel_Frequently;1125;Research & Development;16;1;Life Sciences;1;2017;2;Female;72;1;1;Research Scientist;1;Single;3919;4681;1;Y;Yes;22;4;2;80;0;10;5;3;10;2;6;7
+Adam White;Yes;40;Travel_Rarely;299;Sales;25;4;Marketing;1;2018;4;Male;57;2;3;Sales Executive;2;Single;9094;17235;2;Y;Yes;12;3;3;80;0;9;2;3;5;4;1;0
+Victoria Cruz;Yes;40;Travel_Rarely;575;Sales;22;2;Marketing;1;2019;3;Male;68;2;2;Sales Executive;3;Married;6380;6110;2;Y;Yes;12;3;1;80;2;8;6;3;6;4;1;0
+Dominic Collins;Yes;31;Travel_Rarely;330;Research & Development;22;4;Medical;1;2020;4;Male;98;3;2;Manufacturing Director;3;Married;6179;21057;1;Y;Yes;15;3;4;80;2;10;3;2;10;2;6;7
+Christian Bennett;Yes;36;Travel_Rarely;530;Sales;3;1;Life Sciences;1;2021;3;Male;51;2;3;Sales Executive;4;Married;10325;5518;1;Y;Yes;11;3;1;80;1;16;6;3;16;7;3;7
+Richard Johnson;Yes;41;Travel_Rarely;1085;Research & Development;2;4;Life Sciences;1;2022;2;Female;57;1;1;Laboratory Technician;4;Divorced;2778;17725;4;Y;Yes;13;3;3;80;1;10;1;2;7;7;1;0
+Jack Wood;Yes;39;Travel_Frequently;203;Research & Development;2;3;Life Sciences;1;2023;1;Male;84;3;4;Healthcare Representative;4;Divorced;12169;13547;7;Y;No;11;3;4;80;3;21;4;3;18;7;11;5
+Sebastian Morgan;Yes;50;Travel_Frequently;878;Sales;1;4;Life Sciences;1;2024;2;Male;94;3;2;Sales Executive;3;Divorced;6728;14255;7;Y;No;12;3;4;80;2;12;3;3;6;3;0;1
+Jessica Wilson;Yes;29;Travel_Rarely;318;Research & Development;8;4;Other;1;2025;2;Male;77;1;1;Laboratory Technician;1;Married;2119;4759;1;Y;Yes;11;3;4;80;0;7;4;2;7;7;0;7
+Eleanor Foster;Yes;26;Travel_Rarely;950;Sales;4;4;Marketing;1;2026;4;Male;48;2;2;Sales Executive;4;Single;5828;8450;1;Y;Yes;12;3;2;80;0;8;0;3;8;7;7;4
+Aria Adams;Yes;40;Travel_Rarely;676;Research & Development;9;4;Life Sciences;1;2027;4;Male;86;3;1;Laboratory Technician;1;Single;2018;21831;3;Y;No;14;3;2;80;0;15;3;1;5;4;1;0
+Noah Murphy;Yes;35;Travel_Frequently;880;Sales;12;4;Other;1;2028;4;Male;36;3;2;Sales Executive;4;Single;4581;10414;3;Y;Yes;24;4;1;80;0;13;2;4;11;9;6;7
+Lucy Scott;Yes;49;Travel_Rarely;1184;Sales;11;3;Marketing;1;2029;3;Female;43;3;3;Sales Executive;4;Married;7654;5860;1;Y;No;18;3;1;80;2;9;3;4;9;8;7;7
+Caroline Bennett;Yes;31;Travel_Rarely;249;Sales;6;4;Life Sciences;1;2030;2;Male;76;1;2;Sales Executive;3;Married;6172;20739;4;Y;Yes;18;3;2;80;0;12;3;2;7;7;7;7
+Andrew Wood;Yes;41;Travel_Frequently;143;Sales;4;3;Marketing;1;2031;1;Male;56;3;2;Sales Executive;2;Single;9355;9558;1;Y;No;18;3;3;80;0;8;5;3;8;7;7;7
+Alice Brown;Yes;33;Travel_Frequently;827;Research & Development;29;4;Medical;1;2032;1;Female;54;2;2;Research Scientist;3;Single;4508;3129;1;Y;No;22;4;2;80;0;14;4;3;13;7;3;8
+Laura Baker;Yes;31;Travel_Frequently;1445;Research & Development;1;5;Life Sciences;1;2033;3;Female;100;4;3;Manufacturing Director;2;Single;7446;8931;1;Y;No;11;3;1;80;0;10;2;3;10;8;4;7
+Andrew Ross;Yes;30;Travel_Rarely;740;Sales;1;3;Life Sciences;1;2034;2;Male;64;2;2;Sales Executive;1;Married;9714;5323;1;Y;No;11;3;4;80;1;10;4;3;10;8;6;7
+Caroline Adams;Yes;31;Travel_Frequently;754;Sales;26;4;Marketing;1;2035;1;Male;63;3;2;Sales Executive;4;Married;5617;21075;1;Y;Yes;11;3;3;80;0;10;4;3;10;7;0;8
+Brian Long;Yes;41;Travel_Rarely;1102;Sales;1;2;Life Sciences;1;2036;2;Female;94;3;2;Sales Executive;4;Single;5993;19479;8;Y;Yes;11;3;1;80;0;8;0;1;6;4;0;5
+Scarlett Edwards;Yes;37;Travel_Rarely;1373;Research & Development;2;2;Other;1;2037;4;Male;92;2;1;Laboratory Technician;3;Single;2090;2396;6;Y;Yes;15;3;2;80;0;7;3;3;0;0;0;0
+Hunter Ward;Yes;39;Travel_Rarely;895;Sales;5;3;Technical Degree;1;2038;4;Male;56;3;2;Sales Representative;4;Married;2086;3335;3;Y;No;14;3;3;80;1;19;6;4;1;0;0;0
+Paul Griffin;Yes;24;Travel_Rarely;813;Research & Development;1;3;Medical;1;2039;2;Male;61;3;1;Research Scientist;4;Married;2293;3020;2;Y;Yes;16;3;1;80;1;6;2;2;2;0;2;0
+Sarah Perry;No;57;Travel_Rarely;593;Research & Development;1;4;Medical;1;2040;4;Male;88;3;2;Healthcare Representative;3;Married;6755;2967;2;Y;No;11;3;3;80;0;15;2;3;3;2;1;2
+Noah Fisher;No;28;Travel_Rarely;1169;Human Resources;8;2;Medical;1;2041;2;Male;63;2;1;Human Resources;4;Divorced;4936;23965;1;Y;No;13;3;4;80;1;6;6;3;5;1;0;4
+Leah Young;No;33;Non_Travel;750;Sales;22;2;Marketing;1;2042;3;Male;95;3;2;Sales Executive;2;Married;6146;15480;0;Y;No;13;3;1;80;1;8;2;4;7;7;0;7
+Harper Torres;No;29;Travel_Rarely;718;Research & Development;8;1;Medical;1;2043;2;Male;79;2;2;Manufacturing Director;4;Married;5056;17689;1;Y;Yes;15;3;3;80;1;10;2;2;10;7;1;2
+Andrew Parker;No;25;Travel_Rarely;622;Sales;13;1;Medical;1;2044;2;Male;40;3;1;Sales Representative;3;Married;2096;26376;1;Y;No;11;3;3;80;0;7;1;3;7;4;0;6
+Jason Jackson;No;31;Travel_Rarely;480;Research & Development;7;2;Medical;1;2045;2;Female;31;3;2;Manufacturing Director;1;Married;4306;4156;1;Y;No;12;3;2;80;1;13;5;1;13;10;3;12
+John Price;No;29;Travel_Frequently;461;Research & Development;1;3;Life Sciences;1;2046;4;Male;70;4;2;Healthcare Representative;3;Single;6294;23060;8;Y;Yes;12;3;4;80;0;10;5;4;3;2;0;2
+Carlos Lopez;No;28;Travel_Rarely;1217;Research & Development;1;3;Medical;1;2047;3;Female;67;3;1;Research Scientist;1;Married;3591;12719;1;Y;No;25;4;3;80;1;3;3;3;3;2;1;2
+William Roberts;No;46;Travel_Rarely;705;Sales;2;4;Marketing;1;2048;2;Female;83;3;5;Manager;1;Single;18947;22822;3;Y;No;12;3;4;80;0;22;2;2;2;2;2;1
+Robert Anderson;No;34;Non_Travel;1375;Sales;10;3;Life Sciences;1;2049;4;Male;87;3;2;Sales Executive;3;Divorced;4001;12313;1;Y;Yes;14;3;3;80;1;15;3;3;15;14;0;7
+Violet Baker;No;21;Non_Travel;895;Sales;9;2;Medical;1;2050;1;Male;39;3;1;Sales Representative;4;Single;2610;2851;1;Y;No;24;4;3;80;0;3;3;2;3;2;2;2
+Jasmine Collins;No;33;Travel_Rarely;392;Sales;2;4;Medical;1;2051;4;Male;93;3;2;Sales Executive;4;Divorced;5505;3921;1;Y;No;14;3;3;80;2;6;5;3;6;2;0;4
+Aria Flores;No;33;Travel_Rarely;217;Sales;10;4;Marketing;1;2052;2;Male;43;3;2;Sales Executive;3;Single;5487;10410;1;Y;No;14;3;2;80;0;10;2;2;10;4;0;9
+Rachel Ward;No;35;Travel_Rarely;750;Research & Development;28;3;Life Sciences;1;2053;2;Male;46;4;2;Laboratory Technician;3;Married;3407;25348;1;Y;No;17;3;4;80;2;10;3;2;10;9;6;8
+Claire Long;No;33;Non_Travel;530;Sales;16;3;Life Sciences;1;2054;3;Female;36;3;2;Sales Executive;4;Divorced;5368;16130;1;Y;Yes;25;4;3;80;1;7;2;3;6;5;1;2
+Jonathan Lewis;No;25;Travel_Frequently;772;Research & Development;2;1;Life Sciences;1;2055;4;Male;77;4;2;Manufacturing Director;3;Divorced;5206;4973;1;Y;No;17;3;3;80;2;7;6;3;7;7;0;7
+Christopher Price;No;37;Travel_Rarely;1319;Research & Development;6;3;Medical;1;2056;3;Male;51;4;2;Research Scientist;1;Divorced;5974;17001;4;Y;Yes;13;3;1;80;2;13;2;3;7;7;6;7
+Liam Hall;No;37;Travel_Rarely;977;Research & Development;1;3;Life Sciences;1;2057;4;Female;56;2;2;Manufacturing Director;4;Married;6474;9961;1;Y;No;13;3;2;80;1;14;2;2;14;8;3;11
+Jordan Johnson;No;34;Travel_Rarely;1400;Sales;9;1;Life Sciences;1;2058;2;Female;70;3;2;Sales Executive;3;Married;5714;5829;1;Y;No;20;4;1;80;0;6;3;2;6;5;1;3
+Dominic Perry;No;52;Non_Travel;585;Sales;29;4;Life Sciences;1;2059;1;Male;40;3;1;Sales Representative;4;Divorced;3482;19788;2;Y;No;15;3;2;80;2;16;3;2;9;8;0;0
+Jason Wilson;No;29;Travel_Rarely;1328;Research & Development;2;3;Life Sciences;1;2060;3;Male;76;3;1;Research Scientist;2;Married;2703;4956;0;Y;No;23;4;4;80;1;6;3;3;5;4;0;4
+Evan Fisher;No;26;Travel_Rarely;157;Research & Development;1;3;Medical;1;2061;3;Male;95;3;1;Laboratory Technician;1;Single;2867;20006;0;Y;No;13;3;4;80;0;8;6;2;7;7;7;6
+Adrian Allen;No;45;Travel_Rarely;1316;Research & Development;29;3;Medical;1;2062;3;Male;83;3;1;Research Scientist;4;Single;3452;9752;5;Y;No;13;3;2;80;0;9;2;2;6;5;0;3
+Diana Kelly;No;31;Travel_Rarely;1232;Research & Development;7;4;Medical;1;2063;3;Female;39;3;3;Manufacturing Director;4;Single;7143;25713;1;Y;Yes;14;3;3;80;0;11;2;2;11;9;4;10
+Samuel Young;No;36;Travel_Rarely;1278;Human Resources;8;3;Life Sciences;1;2064;1;Male;77;2;1;Human Resources;1;Married;2342;8635;0;Y;No;21;4;3;80;0;6;3;3;5;4;0;3
+Oscar Cruz;No;28;Travel_Rarely;304;Sales;9;4;Life Sciences;1;2065;2;Male;92;3;2;Sales Executive;4;Single;5253;20750;1;Y;No;16;3;4;80;0;7;1;3;7;5;0;7
+Rachel Kelly;No;45;Travel_Rarely;1329;Research & Development;2;2;Other;1;2066;4;Female;59;2;2;Manufacturing Director;4;Divorced;5770;5388;1;Y;No;19;3;1;80;2;10;3;3;10;7;3;9
+Abigail Fisher;No;35;Travel_Rarely;144;Research & Development;22;3;Life Sciences;1;2067;4;Male;46;1;1;Laboratory Technician;3;Single;4230;19225;0;Y;No;15;3;3;80;0;6;2;3;5;4;4;3
+Lucas Brooks;No;32;Travel_Rarely;1018;Research & Development;2;4;Medical;1;2068;1;Female;74;4;2;Research Scientist;4;Single;5055;10557;7;Y;No;16;3;3;80;0;10;0;2;7;7;0;7
+Michael Scott;No;35;Travel_Frequently;1199;Research & Development;18;4;Life Sciences;1;2069;3;Male;80;3;2;Healthcare Representative;3;Married;5689;24594;1;Y;Yes;14;3;4;80;2;10;2;4;10;2;0;2
+Claire Bailey;No;31;Travel_Rarely;196;Sales;29;4;Marketing;1;2070;1;Female;91;2;2;Sales Executive;4;Married;5468;13402;1;Y;No;14;3;1;80;2;13;3;3;12;7;5;7
+Julia Smith;No;35;Travel_Rarely;1395;Research & Development;9;4;Medical;1;2071;2;Male;48;3;2;Research Scientist;3;Single;5098;18698;1;Y;No;19;3;2;80;0;10;5;3;10;7;0;8
+Madison Johnson;No;40;Travel_Rarely;523;Research & Development;2;3;Life Sciences;1;2072;3;Male;98;3;2;Research Scientist;4;Single;4661;22455;1;Y;No;13;3;3;80;0;9;4;3;9;8;8;8
+Nathan Barnes;No;33;Travel_Rarely;501;Research & Development;15;2;Medical;1;2073;2;Female;95;3;2;Healthcare Representative;4;Married;4878;21653;0;Y;Yes;13;3;1;80;1;10;6;3;9;7;8;1
+Hunter Adams;No;47;Non_Travel;1169;Research & Development;14;4;Technical Degree;1;2074;3;Male;64;3;2;Research Scientist;2;Married;5467;2125;8;Y;No;18;3;3;80;1;16;4;4;8;7;1;7
+Mila Nelson;No;32;Non_Travel;953;Research & Development;5;4;Technical Degree;1;2075;2;Male;65;3;1;Research Scientist;2;Single;2718;17674;2;Y;No;14;3;2;80;0;12;3;3;7;7;0;7
+Nicholas Jackson;No;49;Travel_Rarely;1490;Research & Development;7;4;Life Sciences;1;2076;3;Male;35;3;3;Healthcare Representative;2;Divorced;10466;20948;3;Y;No;14;3;2;80;2;29;3;3;8;7;0;7
+Evan Rogers;No;51;Travel_Rarely;313;Research & Development;3;3;Medical;1;2077;4;Female;98;3;4;Healthcare Representative;2;Single;13734;7192;3;Y;No;18;3;3;80;0;21;6;3;7;7;1;0
+Caroline Roberts;No;31;Travel_Frequently;1125;Research & Development;1;3;Life Sciences;1;2078;4;Male;48;1;2;Research Scientist;1;Married;5003;5771;1;Y;No;21;4;2;80;0;10;6;3;10;8;8;7
+Lucy Kelly;No;28;Travel_Rarely;857;Research & Development;10;3;Other;1;2079;3;Female;59;3;2;Research Scientist;3;Single;3660;7909;3;Y;No;13;3;4;80;0;10;4;4;8;7;1;7

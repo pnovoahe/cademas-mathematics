@@ -13,6 +13,7 @@ from scipy.stats import kendalltau, rankdata
 
 FloatArray = NDArray[np.floating]
 IntArray = NDArray[np.integer]
+BoolArray = NDArray[np.bool_]
 
 
 def top_k_indices(
@@ -38,6 +39,33 @@ def top_k_indices(
     return order[:K]
 
 
+def priority_ranks(
+    P: FloatArray,
+    *,
+    R: FloatArray | None = None,
+    case_id: IntArray | None = None,
+) -> IntArray:
+    """Return 1-based ranks using the same total order as ``top_k_indices``.
+
+    Rank 1 is the highest-priority alternative. Ties are broken by higher
+    ``R``, then by ascending ``case_id`` (row index when unspecified).
+    """
+    P = np.asarray(P, dtype=float)
+    n = int(P.shape[0])
+    if R is None:
+        R = np.zeros(n, dtype=float)
+    else:
+        R = np.asarray(R, dtype=float)
+    if case_id is None:
+        case_id = np.arange(n, dtype=int)
+    else:
+        case_id = np.asarray(case_id, dtype=int)
+    order = np.lexsort((case_id, -R, -P))
+    ranks = np.empty(n, dtype=int)
+    ranks[order] = np.arange(1, n + 1, dtype=int)
+    return ranks
+
+
 def policy_violation_rate(
     P: FloatArray,
     Q: FloatArray,
@@ -50,6 +78,55 @@ def policy_violation_rate(
     idx = top_k_indices(P, K, R=R, case_id=case_id)
     veto = np.asarray(Q, dtype=float)[idx] == 0.0
     return float(np.mean(veto))
+
+
+def topk_clip_veto_shares(
+    P: FloatArray,
+    Q: FloatArray,
+    is_clipped: BoolArray,
+    K: int,
+    *,
+    R: FloatArray | None = None,
+    case_id: IntArray | None = None,
+) -> dict[str, float]:
+    """Partition Top-$K$ into clipped-non-veto, vetoed, and other.
+
+    The three shares are mutually exclusive and sum to 1:
+    - ``clipped_non_veto_top_k_share``: $Q_i>0$ and $R'$ clipped
+    - ``vetoed_top_k_share``: $Q_i=0$ (equals the policy violation rate $V$)
+    - ``other_top_k_share``: remaining Top-$K$ members ($Q_i>0$, not clipped)
+    """
+    Q = np.asarray(Q, dtype=float)
+    is_clipped = np.asarray(is_clipped, dtype=bool)
+    idx = top_k_indices(P, K, R=R, case_id=case_id)
+    q_sel = Q[idx]
+    clipped_sel = is_clipped[idx]
+    veto = q_sel == 0.0
+    clipped_nv = clipped_sel & ~veto
+    other = ~veto & ~clipped_sel
+    return {
+        "clipped_non_veto_top_k_share": float(np.mean(clipped_nv)),
+        "vetoed_top_k_share": float(np.mean(veto)),
+        "other_top_k_share": float(np.mean(other)),
+    }
+
+
+def clipped_non_veto_top_k_share(
+    P: FloatArray,
+    Q: FloatArray,
+    is_clipped: BoolArray,
+    K: int,
+    *,
+    R: FloatArray | None = None,
+    case_id: IntArray | None = None,
+) -> float:
+    """Fraction of Top-$K$ that are non-veto cases with clipped $R'$.
+
+    Returns ``|T_K cap {i: Q_i>0 and R_i clipped}| / K``.
+    """
+    return topk_clip_veto_shares(
+        P, Q, is_clipped, K, R=R, case_id=case_id
+    )["clipped_non_veto_top_k_share"]
 
 
 def veto_preservation_rate(

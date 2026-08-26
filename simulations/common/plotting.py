@@ -15,11 +15,15 @@ from matplotlib.axes import Axes
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 from matplotlib.font_manager import FontProperties
+from matplotlib.legend_handler import HandlerPatch
 from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
+from matplotlib.patches import Patch, PathPatch, Rectangle
+from matplotlib.path import Path as MplPath
 
 from common.config import (
     AGREEMENT_LAMBDA_ALPHAS,
+    AGREEMENT_LAMBDA_MARKER_SCALES,
+    AGREEMENT_MIN_MARKER_SCALE,
     FIG_DPI,
     FONT_SIZE,
     GROUPED_BAR_FIGSIZE,
@@ -39,7 +43,7 @@ from common.config import (
     TWO_PANEL_FIGSIZE,
     agreement_operator_specs,
 )
-from common.metrics import top_k_indices
+from common.metrics import priority_ranks, top_k_indices
 
 PANEL_LETTER_FP = FontProperties(family="Helvetica", weight="bold", size=12)
 
@@ -92,7 +96,7 @@ STRATA_STYLE: tuple[dict, ...] = (
     },
     {
         "key": "veto",
-        "label": r"Veto ($Q=0$)",
+        "label": "Q vetoed",
         "color": COLOR_VETO,
         "marker": "o",
         "alpha": 0.50,
@@ -350,6 +354,14 @@ def _agreement_config_bar_style(
     return color, alpha
 
 
+def _agreement_config_marker_scale(operator: str, lam: float | None) -> float:
+    """Return marker/line scale for one agreement configuration."""
+    del operator
+    if lam is None:
+        return AGREEMENT_MIN_MARKER_SCALE
+    return AGREEMENT_LAMBDA_MARKER_SCALES.get(float(lam), 1.0)
+
+
 def _agreement_config_bar_offsets(
     specs: tuple[tuple[str, str, float | None, str], ...],
     *,
@@ -417,6 +429,57 @@ def _sensitivity_bar_panel_ylim(
         return (y0, y1)
 
     return (y0, y1)
+
+
+def _ordered_stratum_legend_handles(ax: Axes) -> list:
+    """Return stratum legend handles in ``STRATA_STYLE`` label order."""
+    handles, labels = ax.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles, strict=False))
+    return [by_label[style["label"]] for style in STRATA_STYLE if style["label"] in by_label]
+
+
+def _legend_handles_row_major(
+    handles: list,
+    *,
+    ncol: int,
+) -> list:
+    """Reorder legend handles for left-to-right / top-to-bottom reading with ``ncol``."""
+    n = len(handles)
+    if n == 0 or ncol <= 1:
+        return handles
+    nrows = (n + ncol - 1) // ncol
+    reordered: list = []
+    for legend_idx in range(n):
+        col = legend_idx // nrows
+        row = legend_idx % nrows
+        src = row * ncol + col
+        reordered.append(handles[src])
+    return reordered
+
+
+class _BlankLegendHandler(HandlerPatch):
+    """Draw no visible handle for padded legend slots."""
+
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        del legend, orig_handle, fontsize, handlebox
+        return Line2D([], [], linestyle="none", marker="None", alpha=0.0)
+
+
+def _agreement_config_legend_handles(
+    legend_handles: list[Patch],
+) -> tuple[list[Patch], dict]:
+    """Single-box 3×3 legend layout: $A_L$ / $A_G$ / $A_M$ rows with blank padding."""
+    blank = Patch(facecolor="none", edgecolor="none", linewidth=0.0, label=" ")
+    grid = (
+        (legend_handles[0], legend_handles[1], legend_handles[2]),
+        (legend_handles[3], legend_handles[4], legend_handles[5]),
+        (legend_handles[6], blank, blank),
+    )
+    reordered: list[Patch] = []
+    for col in range(3):
+        for row in range(3):
+            reordered.append(grid[row][col])
+    return reordered, {blank: _BlankLegendHandler()}
 
 
 def plot_agreement_config_bars(
@@ -528,11 +591,14 @@ def plot_agreement_config_bars(
     style_axes_frame(ax)
     if show_legend:
         legend_kw = {k: v for k, v in LEGEND_KW.items() if k != "loc"}
+        legend_handles_out, handler_map = _agreement_config_legend_handles(legend_handles)
         ax.legend(
-            handles=legend_handles,
+            handles=legend_handles_out,
+            handler_map=handler_map,
             loc="upper center",
             bbox_to_anchor=(0.5, legend_anchor_y),
-            ncol=4,
+            ncol=3,
+            borderaxespad=0.0,
             columnspacing=0.55,
             handlelength=1.0,
             handletextpad=0.35,
@@ -614,14 +680,198 @@ def plot_agreement_config_boxplots(
     style_axes_frame(ax)
     if show_legend:
         legend_kw = {k: v for k, v in LEGEND_KW.items() if k != "loc"}
+        ncol = 4
         ax.legend(
-            handles=legend_handles,
+            handles=_legend_handles_row_major(legend_handles, ncol=ncol),
             loc="upper center",
             bbox_to_anchor=(0.5, 1.02),
-            ncol=4,
+            ncol=ncol,
             columnspacing=0.55,
             handlelength=1.0,
             handletextpad=0.35,
+            **legend_kw,
+        )
+    return ax
+
+
+def plot_agreement_config_lines(
+    ax: Axes,
+    df: pd.DataFrame,
+    *,
+    x_col: str,
+    group_col: str,
+    y_col: str,
+    ci_low_col: str,
+    ci_high_col: str,
+    specs: tuple[tuple[str, str, float | None, str], ...] | None = None,
+    xlabel: str = "",
+    ylabel: str = "",
+    title: str = "",
+    ylim: tuple[float, float] | None = (0.0, 1.0),
+    ci_alpha: float = 0.14,
+    show_legend: bool = False,
+    legend_anchor_y: float = 0.99,
+    legend_loc: str = "upper center",
+    legend_bbox_to_anchor: tuple[float, float] | None = None,
+    legend_fontsize: float | None = None,
+    legend_borderpad: float = 0.4,
+    legend_labelspacing: float = 0.5,
+    legend_borderaxespad: float = 0.0,
+    legend_columnspacing: float = 0.55,
+    legend_handletextpad: float = 0.35,
+    series_scale: float = 0.85,
+    xticks: tuple[int, ...] | list[int] | None = None,
+) -> Axes:
+    """Line plot of means + shaded CI for the seven agreement configurations."""
+    if specs is None:
+        specs = agreement_operator_specs()
+
+    legend_handles: list[Line2D] = []
+    for cid, operator, lam, label in specs:
+        color, alpha = _agreement_config_bar_style(operator, lam)
+        marker_scale = _agreement_config_marker_scale(operator, lam)
+        style = OPERATOR_STYLE[operator]
+        sub = df[df[group_col] == cid].sort_values(x_col)
+        if sub.empty:
+            continue
+        ax.fill_between(
+            sub[x_col],
+            sub[ci_low_col],
+            sub[ci_high_col],
+            color=color,
+            alpha=ci_alpha * alpha,
+            linewidth=0,
+            zorder=max(style.get("zorder", 2) - 1, 1),
+        )
+        (line,) = ax.plot(
+            sub[x_col],
+            sub[y_col],
+            color=color,
+            alpha=alpha,
+            marker=style["marker"],
+            markersize=style["markersize"] * series_scale * marker_scale,
+            linestyle=style["linestyle"],
+            linewidth=style["linewidth"] * series_scale * marker_scale,
+            zorder=style.get("zorder", 2),
+            markeredgecolor="white",
+            markeredgewidth=0.45 * series_scale * marker_scale,
+            label=label,
+        )
+        legend_handles.append(line)
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if title:
+        ax.set_title(title, pad=4)
+    if ylim is not None:
+        ax.set_ylim(*ylim)
+    if xticks is not None:
+        ax.set_xticks(list(xticks))
+    style_axes_frame(ax)
+    if show_legend and legend_handles:
+        legend_kw = {k: v for k, v in LEGEND_KW.items() if k != "loc"}
+        if legend_fontsize is not None:
+            legend_kw["fontsize"] = legend_fontsize
+        blank = Patch(facecolor="none", edgecolor="none", linewidth=0.0, label=" ")
+        grid = (
+            (legend_handles[0], legend_handles[1], legend_handles[2]),
+            (legend_handles[3], legend_handles[4], legend_handles[5]),
+            (legend_handles[6], blank, blank),
+        )
+        reordered: list = []
+        for col in range(3):
+            for row in range(3):
+                reordered.append(grid[row][col])
+        ax.legend(
+            handles=reordered,
+            handler_map={blank: _BlankLegendHandler()},
+            loc=legend_loc,
+            bbox_to_anchor=(
+                legend_bbox_to_anchor
+                if legend_bbox_to_anchor is not None
+                else (0.5, legend_anchor_y)
+            ),
+            ncol=3,
+            borderaxespad=legend_borderaxespad,
+            borderpad=legend_borderpad,
+            labelspacing=legend_labelspacing,
+            columnspacing=legend_columnspacing,
+            handlelength=1.35,
+            handletextpad=legend_handletextpad,
+            **legend_kw,
+        )
+    return ax
+
+
+SIGMA_R_LINE_STYLES: dict[float, str] = {
+    0.0: "-",
+    0.05: "--",
+    0.10: ":",
+    0.20: "-.",
+}
+
+
+def plot_sigma_line_ci(
+    ax: Axes,
+    df: pd.DataFrame,
+    *,
+    x_col: str,
+    group_col: str,
+    y_col: str,
+    ci_low_col: str,
+    ci_high_col: str,
+    sigma_values: tuple[float, ...] | list[float],
+    xlabel: str = "",
+    ylabel: str = "",
+    ylim: tuple[float, float] | None = (0.0, 1.0),
+    ci_alpha: float = 0.18,
+    color: str = "#333333",
+    linewidth: float = 1.8,
+    show_legend: bool = True,
+    legend_fontsize: float | None = None,
+    xticks: tuple[int, ...] | list[int] | None = None,
+) -> Axes:
+    """Line plot of Monte Carlo means by $\\sigma_R$ with shaded 95% CI bands."""
+    legend_handles: list[Line2D] = []
+    for sigma_r in sigma_values:
+        sub = df[np.isclose(df[group_col].to_numpy(), float(sigma_r))].sort_values(x_col)
+        if sub.empty:
+            continue
+        linestyle = SIGMA_R_LINE_STYLES.get(float(sigma_r), "-")
+        ax.fill_between(
+            sub[x_col],
+            sub[ci_low_col],
+            sub[ci_high_col],
+            color=color,
+            alpha=ci_alpha,
+            linewidth=0,
+            zorder=1,
+        )
+        (line,) = ax.plot(
+            sub[x_col],
+            sub[y_col],
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            label=rf"$\sigma_R={float(sigma_r):.2f}$",
+            zorder=2,
+        )
+        legend_handles.append(line)
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if ylim is not None:
+        ax.set_ylim(*ylim)
+    if xticks is not None:
+        ax.set_xticks(list(xticks))
+    style_axes_frame(ax)
+    if show_legend and legend_handles:
+        legend_kw = {k: v for k, v in LEGEND_KW.items() if k != "loc"}
+        if legend_fontsize is not None:
+            legend_kw["fontsize"] = legend_fontsize
+        ax.legend(
+            handles=legend_handles,
+            loc="upper left",
             **legend_kw,
         )
     return ax
@@ -967,6 +1217,8 @@ def _draw_rq_scatter(
     is_veto: np.ndarray,
     *,
     threshold: float = QUADRANT_THRESHOLD,
+    show_ylabel: bool = True,
+    alpha_scale: float = 1.0,
 ) -> None:
     """Scatter $R$ vs $Q$ with quadrant strata and dashed $R=Q=0.5$ guides."""
     del is_veto  # strata derived from $(R,Q)$ for visual consistency
@@ -990,9 +1242,9 @@ def _draw_rq_scatter(
         dashes=(3.0, 2.0),
         zorder=1,
     )
-    _scatter_strata(ax, R, Q, masks)
+    _scatter_strata(ax, R, Q, masks, alpha_scale=alpha_scale)
     ax.set_xlabel(r"Predictive score $R$")
-    ax.set_ylabel(r"Contextual score $Q$")
+    ax.set_ylabel(r"Contextual score $Q$" if show_ylabel else "")
     ax.set_xlim(-0.02, 1.02)
     ax.set_ylim(-0.02, 1.02)
     style_axes_frame(ax)
@@ -1096,11 +1348,11 @@ def _finish_panel_a_legend(
     y_top: float = 1.18,
     legend_y: float = 1.03,
 ) -> None:
-    handles, _ = ax.get_legend_handles_labels()
+    handles = _ordered_stratum_legend_handles(ax)
     ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     _add_top_horizontal_legend(
         ax,
-        handles,
+        _legend_handles_row_major(handles, ncol=3),
         x_center=0.5,
         y_bottom=-0.02,
         y_top=y_top,
@@ -1108,6 +1360,28 @@ def _finish_panel_a_legend(
         ncol=3,
         columnspacing=0.55,
         handletextpad=0.25,
+    )
+
+
+def _finish_rq_side_legend(ax: Axes) -> None:
+    """Vertical stratum legend to the right of a square $(R,Q)$ panel."""
+    handles = _ordered_stratum_legend_handles(ax)
+    ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_ylim(-0.02, 1.0)
+    legend_base = {k: v for k, v in LEGEND_KW.items() if k != "loc"}
+    ax.legend(
+        handles=handles,
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        bbox_transform=ax.transAxes,
+        borderaxespad=0.0,
+        ncol=1,
+        columnspacing=0.4,
+        handlelength=1.0,
+        handletextpad=0.35,
+        labelspacing=0.35,
+        markerscale=0.95,
+        **legend_base,
     )
 
 
@@ -1184,6 +1458,7 @@ def _plot_single_lambda_operator_violins(
     top_k: int = TOP_K,
     threshold: float = QUADRANT_THRESHOLD,
     show_ylabel: bool = True,
+    top_k_annotate_ops: tuple[int, int] | None = None,
 ) -> None:
     """One $\\lambda$ panel: black-outline violins with in-contour stratum points."""
     if operator_labels is None:
@@ -1196,6 +1471,9 @@ def _plot_single_lambda_operator_violins(
     masks = _context_strata_masks(R, Q, threshold=threshold)
     y_grid = np.linspace(0.0, 1.0, 220)
     jitter_rng = np.random.default_rng(42 + int(round(float(lam) * 1000)))
+    top_k_cutoffs: dict[int, float] = {}
+    top_k_half_at: dict[int, object] = {}
+    top_k_values: dict[int, np.ndarray] = {}
 
     for i_op, operator in enumerate(operators):
         pos = float(positions[i_op])
@@ -1241,6 +1519,9 @@ def _plot_single_lambda_operator_violins(
             parts["cmedians"].set_zorder(8)
 
         p_cutoff = _top_k_p_cutoff(values, R=R, case_id=case_id, K=top_k)
+        top_k_cutoffs[i_op] = p_cutoff
+        top_k_half_at[i_op] = half_at
+        top_k_values[i_op] = values
         ax.plot(
             [pos - half_w, pos + half_w],
             [p_cutoff, p_cutoff],
@@ -1262,6 +1543,52 @@ def _plot_single_lambda_operator_violins(
     ax.set_ylim(-0.02, 1.02)
     ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     ax.set_title(rf"$\lambda={lam:.2f}$", pad=4)
+    if top_k_annotate_ops is not None:
+        i_a, i_b = top_k_annotate_ops
+        x_a = float(positions[i_a])
+        x_b = float(positions[i_b])
+        x_text = 0.5 * (x_a + x_b)
+        y_text = 0.9
+        ann_fs = max(7.0, float(ax.yaxis.label.get_size()) - 0.5)
+        edge_outside = 0.03
+        for x_pos, i_op, toward_center in ((x_a, i_a, +1.0), (x_b, i_b, -1.0)):
+            values = top_k_values[i_op]
+            y_cut = top_k_cutoffs[i_op]
+            y_top = float(np.max(values))
+            y_target = 0.5 * (y_cut + y_top)
+            edge_half = float(top_k_half_at[i_op](y_target))
+            x_target = x_pos + toward_center * (edge_half + edge_outside)
+            ax.annotate(
+                "",
+                xy=(x_target, y_target),
+                xytext=(x_text, y_text),
+                textcoords="data",
+                arrowprops={
+                    "arrowstyle": "-|>",
+                    "color": "black",
+                    "linewidth": 0.9,
+                    "shrinkA": 8,
+                    "shrinkB": 0,
+                },
+                zorder=10,
+            )
+        ax.text(
+            x_text,
+            y_text,
+            r"Top-$K$",
+            ha="center",
+            va="center",
+            fontsize=ann_fs,
+            fontweight="bold",
+            color="black",
+            zorder=11,
+            bbox={
+                "boxstyle": "round,pad=0.15",
+                "facecolor": "white",
+                "edgecolor": "none",
+                "alpha": 0.85,
+            },
+        )
     style_axes_frame(ax)
 
 
@@ -1291,32 +1618,63 @@ def _finish_panel_c_legend(
 
 def _policy_compliance_overview_layout(
     fig: Figure,
-    side_in: float,
     *,
-    left_in: float = 0.68,
-    right_in: float = 0.42,
-    top_in: float = 0.38,
-    bottom_in: float = 0.48,
-    col_gap_in: float = 0.54,
-    row_gap_in: float = 0.48,
-    row_gap_top_in: float | None = None,
+    left_in: float = 0.72,
+    right_in: float = 0.28,
+    top_in: float = 0.42,
+    bottom_in: float = 0.55,
+    col_gap_in: float = 0.48,
+    row_gap_in: float = 0.72,
+    panel_w_in: float = 2.20,
+    panel_h_in: float = 2.20,
+    legend_w_in: float = 0.95,
 ) -> dict[str, tuple[float, float, float, float]]:
-    """Layout: (a)|(b); (c)|(d); (e) full-width dense $V(\\lambda)$."""
+    """Layout matching sensitivity overview spacing.
+
+    Row 1: (a) dense $V(\\lambda)$ (narrower); (b) square $R$–$Q$ with room
+    for a vertical legend to its right.
+    Row 2: (c)|(d)|(e) three equal squares (violins).
+    """
     fig_w, fig_h = fig.get_size_inches()
     inv_w, inv_h = 1.0 / fig_w, 1.0 / fig_h
-    full_w_in = 2.0 * side_in + col_gap_in
-    gap_mid = row_gap_in
-    gap_top = row_gap_in if row_gap_top_in is None else row_gap_top_in
-    e_bottom_in = bottom_in
-    mid_bottom_in = e_bottom_in + side_in + gap_mid
-    top_bottom_in = mid_bottom_in + side_in + gap_top
-    right_left_in = left_in + side_in + col_gap_in
+    total_w_in = 3.0 * panel_w_in + 2.0 * col_gap_in
+    # Carve legend room from the former double-width of panel (a).
+    a_w_in = total_w_in - col_gap_in - panel_w_in - legend_w_in
+    top_y_in = bottom_in + panel_h_in + row_gap_in
+    b_x_in = left_in + a_w_in + col_gap_in
+    col1_x = left_in + panel_w_in + col_gap_in
+    col2_x = left_in + 2.0 * (panel_w_in + col_gap_in)
     return {
-        "a": (left_in * inv_w, top_bottom_in * inv_h, side_in * inv_w, side_in * inv_h),
-        "b": (right_left_in * inv_w, top_bottom_in * inv_h, side_in * inv_w, side_in * inv_h),
-        "c": (left_in * inv_w, mid_bottom_in * inv_h, side_in * inv_w, side_in * inv_h),
-        "d": (right_left_in * inv_w, mid_bottom_in * inv_h, side_in * inv_w, side_in * inv_h),
-        "e": (left_in * inv_w, e_bottom_in * inv_h, full_w_in * inv_w, side_in * inv_h),
+        "a": (
+            left_in * inv_w,
+            top_y_in * inv_h,
+            a_w_in * inv_w,
+            panel_h_in * inv_h,
+        ),
+        "b": (
+            b_x_in * inv_w,
+            top_y_in * inv_h,
+            panel_w_in * inv_w,
+            panel_h_in * inv_h,
+        ),
+        "c": (
+            left_in * inv_w,
+            bottom_in * inv_h,
+            panel_w_in * inv_w,
+            panel_h_in * inv_h,
+        ),
+        "d": (
+            col1_x * inv_w,
+            bottom_in * inv_h,
+            panel_w_in * inv_w,
+            panel_h_in * inv_h,
+        ),
+        "e": (
+            col2_x * inv_w,
+            bottom_in * inv_h,
+            panel_w_in * inv_w,
+            panel_h_in * inv_h,
+        ),
     }
 
 
@@ -1407,6 +1765,8 @@ def _plot_cropped_operator_agreement_heatmap(
         sigma_r=sigma_r,
     )
     cropped = _crop_agreement_matrix(mat, row_idx, col_idx)
+    axis_fs = float(cell_fontsize) if cell_fontsize is not None else float(fontsize)
+    ann_fs = axis_fs
     return _plot_triangular_agreement_heatmap(
         ax,
         cropped,
@@ -1417,8 +1777,8 @@ def _plot_cropped_operator_agreement_heatmap(
         vmax=vmax,
         cmap=cmap,
         annotate=annotate,
-        fontsize=fontsize,
-        cell_fontsize=cell_fontsize,
+        fontsize=axis_fs,
+        cell_fontsize=ann_fs,
         face_alpha=face_alpha,
         mask_mode="finite",
     )
@@ -1434,7 +1794,6 @@ def _draw_operator_agreement_heatmap_panel(
     vmax: float,
     cmap: LinearSegmentedColormap | str | None = None,
     cell_fontsize: float = 9.0,
-    tick_fontsize: float = 6.5,
     colorbar: bool = True,
 ) -> None:
     im = _plot_cropped_operator_agreement_heatmap(
@@ -1445,7 +1804,6 @@ def _draw_operator_agreement_heatmap_panel(
         vmin=vmin,
         vmax=vmax,
         cmap=cmap,
-        fontsize=tick_fontsize,
         cell_fontsize=cell_fontsize,
     )
     if colorbar:
@@ -1456,7 +1814,7 @@ def _draw_operator_agreement_heatmap_panel(
             vmin=vmin,
             vmax=vmax,
             n_ticks=5,
-            tick_fontsize=tick_fontsize - 0.5,
+            tick_fontsize=cell_fontsize,
             x_data=x_cb,
             y_top_data=y_cb_top,
             y_bottom_data=y_cb_bottom,
@@ -1474,7 +1832,7 @@ def policy_compliance_three_panel(
     path_stem: Path,
     lambda_values: tuple[float, ...] | list[float],
 ) -> list[Path]:
-    """Overview: (a) $R$–$Q$; (b–d) violins; (e) $V(\\lambda)$."""
+    """Overview: (a) $V(\\lambda)$; (b) $R$–$Q$; (c–e) violins at three $\\lambda$."""
     panel_fs = max(8, int(round(FONT_SIZE * PLOT_FONT_SCALE / 1.45)))
     apply_paper_style(font_size=panel_fs)
 
@@ -1482,58 +1840,33 @@ def policy_compliance_three_panel(
     if len(lambda_values) != 3:
         raise ValueError("policy_compliance_three_panel expects exactly three lambda values.")
 
-    side_in = 2.45
-    left_in, right_in = 0.68, 0.42
-    top_in, bottom_in = 0.38, 0.55
-    # Wider column gap so panel (b) can carry its own y-axis title.
-    col_gap_in, row_gap_in = 0.78, 0.50
-    # Slightly more space between row 1 (a–b) and row 2 (c–d) so λ titles
-    # clear the x tick labels above.
-    row_gap_top_in = 0.62
-    fig_w = left_in + 2.0 * side_in + col_gap_in + right_in
-    fig_h = bottom_in + 3.0 * side_in + 2.0 * row_gap_in + row_gap_top_in + top_in
+    # Match sensitivity_r_noise_overview panel geometry and gaps.
+    left_in, right_in = 0.72, 0.28
+    top_in, bottom_in = 0.42, 0.55
+    col_gap_in, row_gap_in = 0.48, 0.72
+    panel_w_in = panel_h_in = 2.20
+    legend_w_in = 0.95
+    fig_w = left_in + 3.0 * panel_w_in + 2.0 * col_gap_in + right_in
+    fig_h = bottom_in + 2.0 * panel_h_in + row_gap_in + top_in
     fig = plt.figure(figsize=(fig_w, fig_h))
-
     rects = _policy_compliance_overview_layout(
         fig,
-        side_in,
         left_in=left_in,
         right_in=right_in,
         top_in=top_in,
         bottom_in=bottom_in,
         col_gap_in=col_gap_in,
         row_gap_in=row_gap_in,
-        row_gap_top_in=row_gap_top_in,
+        panel_w_in=panel_w_in,
+        panel_h_in=panel_h_in,
+        legend_w_in=legend_w_in,
     )
-
     letter_fs = panel_fs + 1
+
+    # (a) Dense Monte Carlo sweep $V(\\lambda)$ — narrowed to free legend room.
     ax_a = fig.add_axes(rects["a"])
-    _draw_rq_scatter(ax_a, R, Q, is_veto)
-    style_square_axes_frame(ax_a)
-    _finish_panel_a_legend(ax_a)
-    add_panel_letter(ax_a, "a", font_size=letter_fs)
-
-    for letter, key, lam, show_ylabel in (
-        ("b", "b", lambda_values[0], True),
-        ("c", "c", lambda_values[1], True),
-        ("d", "d", lambda_values[2], False),
-    ):
-        ax = fig.add_axes(rects[key])
-        _plot_single_lambda_operator_violins(
-            ax,
-            p_data,
-            lam=lam,
-            R=R,
-            Q=Q,
-            case_id=case_id,
-            show_ylabel=show_ylabel,
-        )
-        style_square_axes_frame(ax)
-        add_panel_letter(ax, letter, font_size=letter_fs)
-
-    ax_e = fig.add_axes(rects["e"])
     plot_line_mean_ci(
-        ax_e,
+        ax_a,
         dense_df,
         x_col="lambda",
         group_col="operator",
@@ -1548,8 +1881,38 @@ def policy_compliance_three_panel(
         show_legend=False,
         series_scale=0.9,
     )
-    _finish_panel_c_legend(ax_e)
-    add_panel_letter(ax_e, "e", font_size=letter_fs)
+    ax_a.set_title(r"Policy violation rate $V(\lambda)$", pad=4)
+    _finish_panel_c_legend(ax_a, y_top=1.16, legend_y=0.98)
+    style_axes_frame(ax_a)
+    add_panel_letter(ax_a, "a", font_size=letter_fs)
+
+    # (b) Illustrative $(R,Q)$ scatter — square; vertical legend on the right.
+    ax_b = fig.add_axes(rects["b"])
+    _draw_rq_scatter(ax_b, R, Q, is_veto)
+    style_square_axes_frame(ax_b)
+    ax_b.set_title(r"Illustrative $(R,Q)$ population", pad=4)
+    _finish_rq_side_legend(ax_b)
+    add_panel_letter(ax_b, "b", font_size=letter_fs)
+
+    # (c–e) Violins at three $\lambda$ — equal squares; y-label only on (c).
+    for letter, lam, show_ylabel in (
+        ("c", lambda_values[0], True),
+        ("d", lambda_values[1], False),
+        ("e", lambda_values[2], False),
+    ):
+        ax = fig.add_axes(rects[letter])
+        _plot_single_lambda_operator_violins(
+            ax,
+            p_data,
+            lam=lam,
+            R=R,
+            Q=Q,
+            case_id=case_id,
+            show_ylabel=show_ylabel,
+            top_k_annotate_ops=(0, 1) if letter == "c" else None,
+        )
+        style_square_axes_frame(ax)
+        add_panel_letter(ax, letter, font_size=letter_fs)
 
     return save_figure(fig, path_stem, bbox_inches=None)
 
@@ -1732,7 +2095,7 @@ def sensitivity_r_noise_overview(
     for letter, sigma_r in zip(("a", "b", "c"), sigma_values):
         ax = fig.add_axes(rects[letter])
         R, Q, is_veto = noisy_pops[float(sigma_r)]
-        _draw_rq_scatter(ax, R, Q, is_veto)
+        _draw_rq_scatter(ax, R, Q, is_veto, show_ylabel=(letter == "a"))
         style_square_axes_frame(ax)
         ax.set_title(rf"$\sigma_R={sigma_r:.2f}$", pad=4)
         ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
@@ -1773,7 +2136,7 @@ def sensitivity_r_noise_overview(
             show_legend=(letter == "d"),
             reference_y=0.0 if metric == "kendall_tau" else None,
             family_gaps=True,
-            legend_anchor_y=0.94,
+            legend_anchor_y=0.99,
         )
         style_square_axes_frame(ax)
         add_panel_letter(ax, letter, font_size=letter_fs)
@@ -2015,7 +2378,7 @@ def sensitivity_operator_agreement(
                 vmin=-1.0,
                 vmax=1.0,
                 n_ticks=5,
-                tick_fontsize=5.5,
+                tick_fontsize=8.5,
                 x_data=x_cb,
                 y_top_data=y_cb_top,
                 y_bottom_data=y_cb_bottom,
@@ -2042,11 +2405,788 @@ def sensitivity_operator_agreement(
                 vmin=0.0,
                 vmax=1.0,
                 n_ticks=5,
-                tick_fontsize=5.5,
+                tick_fontsize=8.5,
                 x_data=x_cb,
                 y_top_data=y_cb_top,
                 y_bottom_data=y_cb_bottom,
             )
         add_panel_letter(ax, letter, font_size=letter_fs)
+
+    return save_figure(fig, path_stem, bbox_inches=None)
+
+
+def _sensitivity_2x2_layout(
+    fig: Figure,
+    *,
+    left_in: float = 0.72,
+    right_in: float = 0.28,
+    top_in: float = 0.42,
+    bottom_in: float = 0.55,
+    col_gap_in: float = 0.48,
+    row_gap_in: float = 0.72,
+    panel_w_in: float = 2.20,
+    panel_h_in: float = 2.20,
+) -> dict[str, tuple[float, float, float, float]]:
+    """Four equal square panels in a 2×2 grid (row-major a–d)."""
+    fig_w, fig_h = fig.get_size_inches()
+    inv_w, inv_h = 1.0 / fig_w, 1.0 / fig_h
+    rects: dict[str, tuple[float, float, float, float]] = {}
+    letters = ("a", "b", "c", "d")
+    for idx, letter in enumerate(letters):
+        row, col = divmod(idx, 2)
+        x_in = left_in + col * (panel_w_in + col_gap_in)
+        y_in = bottom_in + (1 - row) * (panel_h_in + row_gap_in)
+        rects[letter] = (
+            x_in * inv_w,
+            y_in * inv_h,
+            panel_w_in * inv_w,
+            panel_h_in * inv_h,
+        )
+    return rects
+
+
+def _sensitivity_abc_de_layout(
+    fig: Figure,
+    *,
+    left_in: float = 0.72,
+    right_in: float = 0.28,
+    top_in: float = 0.42,
+    bottom_in: float = 0.55,
+    col_gap_in: float = 0.48,
+    row_gap_in: float = 0.72,
+    panel_w_in: float = 2.20,
+    panel_h_in: float = 2.20,
+    panel_e_h_in: float | None = None,
+) -> dict[str, tuple[float, float, float, float]]:
+    """Row 1: (a)(b)(c); row 2: (d) then (e) spanning the width of (b)+(c)."""
+    panel_e_h = panel_h_in if panel_e_h_in is None else panel_e_h_in
+    fig_w, fig_h = fig.get_size_inches()
+    inv_w, inv_h = 1.0 / fig_w, 1.0 / fig_h
+    y_de_in = bottom_in
+    bottom_row_h = max(panel_h_in, panel_e_h)
+    y_abc_in = bottom_in + bottom_row_h + row_gap_in
+    rects: dict[str, tuple[float, float, float, float]] = {}
+    for col, letter in enumerate(("a", "b", "c")):
+        x_in = left_in + col * (panel_w_in + col_gap_in)
+        rects[letter] = (
+            x_in * inv_w,
+            y_abc_in * inv_h,
+            panel_w_in * inv_w,
+            panel_h_in * inv_h,
+        )
+    rects["d"] = (
+        left_in * inv_w,
+        y_de_in * inv_h,
+        panel_w_in * inv_w,
+        panel_h_in * inv_h,
+    )
+    # (e) occupies columns (b) and (c); height may match (d) without being square.
+    x_e_in = left_in + panel_w_in + col_gap_in
+    panel_e_w_in = 2.0 * panel_w_in + col_gap_in
+    rects["e"] = (
+        x_e_in * inv_w,
+        y_de_in * inv_h,
+        panel_e_w_in * inv_w,
+        panel_e_h * inv_h,
+    )
+    return rects
+
+
+# Within each composition tile, bottom → top: Other, clipped non-veto, Q vetoed.
+# Keep alphas comparable so segment height (not fill strength) drives perceived size.
+CLIP_VETO_TILE_SPECS: tuple[tuple[str, str, str, float], ...] = (
+    ("other_top_k_share_mean", "Other", COLOR_WEAK, 0.22),
+    ("clipped_non_veto_top_k_share_mean", "Clipped, non-veto", COLOR_RWEAK, 0.48),
+    ("vetoed_top_k_share_mean", "Q vetoed", COLOR_VETO, 0.48),
+)
+
+
+def _plot_topk_composition_tile_grid(
+    ax: Axes,
+    agg: pd.DataFrame,
+    *,
+    k_values: tuple[int, ...],
+    sigma_values: tuple[float, ...],
+    title: str = "",
+    xlabel: str = r"Top-$K$ size",
+    ylabel: str = r"$\sigma_R$",
+    fontsize: float = 7.0,
+    legend_fontsize: float | None = None,
+    show_legend: bool = True,
+    pad: float = 0.012,
+    row_pad: float = 0.085,
+) -> Axes:
+    """σ_R × K tile grid; each tile is a 100% stacked Top-$K$ composition.
+
+    Visual stack (bottom → top): Other, clipped non-veto, Q vetoed.
+    $\\sigma_R$ increases upward.
+    """
+    df = agg.copy()
+    df["sigma_r"] = df["sigma_r"].astype(float)
+    df["top_k"] = df["top_k"].astype(int)
+    n_rows = len(sigma_values)
+    n_cols = len(k_values)
+    stack_specs = CLIP_VETO_TILE_SPECS
+    ann_fs = max(5.0, float(fontsize) - 0.5)
+    pad_x = float(pad)
+    pad_y = float(row_pad)
+
+    for i, sigma_r in enumerate(sigma_values):
+        for j, k in enumerate(k_values):
+            row = df[
+                np.isclose(df["sigma_r"].to_numpy(), float(sigma_r))
+                & (df["top_k"].to_numpy() == int(k))
+            ]
+            if row.empty:
+                continue
+            shares = np.asarray(
+                [float(row[col].iloc[0]) for col, _, _, _ in stack_specs],
+                dtype=float,
+            )
+            shares = np.clip(shares, 0.0, None)
+            total = float(shares.sum())
+            if total > 0.0:
+                shares = shares / total
+            x0 = j - 0.5 + pad_x
+            y0 = i - 0.5 + pad_y
+            width = 1.0 - 2.0 * pad_x
+            height = 1.0 - 2.0 * pad_y
+            # Label the largest share; break near-ties by rounded display %.
+            pct = np.round(100.0 * shares, 1)
+            imax = int(np.argmax(pct)) if shares.size else -1
+            if shares.size and int(np.sum(pct == pct[imax])) > 1:
+                imax = int(np.argmax(shares))
+            y_cursor = y0
+            label_y: float | None = None
+            label_share = 0.0
+            for idx, (share, (_, _, color, alpha)) in enumerate(
+                zip(shares.tolist(), stack_specs)
+            ):
+                seg_h = height * float(share)
+                if seg_h <= 0.0:
+                    continue
+                ax.add_patch(
+                    Rectangle(
+                        (x0, y_cursor),
+                        width,
+                        seg_h,
+                        facecolor=color,
+                        edgecolor="none",
+                        linewidth=0.0,
+                        alpha=float(alpha),
+                        zorder=2,
+                    )
+                )
+                if idx == imax:
+                    label_y = y_cursor + 0.5 * seg_h
+                    label_share = float(share)
+                y_cursor += seg_h
+            if label_y is not None and label_share > 0.0:
+                # Keep the label inside the winning segment so it does not
+                # spill into a neighbouring band on short top strips.
+                seg_fs = float(ann_fs) * float(
+                    np.clip(label_share / 0.32, 0.55, 1.0)
+                )
+                ax.text(
+                    j,
+                    label_y,
+                    f"{pct[imax]:.1f}%",
+                    ha="center",
+                    va="center",
+                    color="black",
+                    fontsize=seg_fs,
+                    fontweight="medium",
+                    zorder=5,
+                    clip_on=True,
+                )
+
+    ax.set_xlim(-0.5, n_cols - 0.5)
+    # Headroom above the tiles for an in-axes legend (no external width cost).
+    legend_pad = 0.58
+    ax.set_ylim(-0.5, n_rows - 0.5 + legend_pad)
+    ax.set_xticks(range(n_cols))
+    ax.set_yticks(range(n_rows))
+    ax.set_xticklabels([str(int(k)) for k in k_values], fontsize=fontsize)
+    ax.set_yticklabels([f"{float(s):.2f}" for s in sigma_values], fontsize=fontsize)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if title:
+        ax.set_title(title, pad=4)
+    ax.set_aspect("auto")
+    style_axes_frame(ax)
+    ax.tick_params(length=3.5, width=1.0, direction="out", labelsize=fontsize)
+    for spine_name in ("left", "bottom"):
+        ax.spines[spine_name].set_linewidth(1.0)
+        ax.spines[spine_name].set_edgecolor("black")
+
+    if show_legend:
+        legend_handles = [
+            Patch(
+                facecolor=color,
+                edgecolor="none",
+                alpha=float(alpha),
+                label=label,
+            )
+            for _, label, color, alpha in reversed(stack_specs)
+        ]
+        legend_kw = {k: v for k, v in LEGEND_KW.items() if k != "loc"}
+        legend_kw["fontsize"] = (
+            float(fontsize) if legend_fontsize is None else float(legend_fontsize)
+        )
+        legend_kw.update(
+            {
+                "frameon": True,
+                "fancybox": False,
+                "edgecolor": "#CCCCCC",
+                "borderpad": 0.35,
+                "columnspacing": 1.0,
+                "handletextpad": 0.4,
+            }
+        )
+        ax.legend(
+            handles=legend_handles,
+            loc="upper right",
+            bbox_to_anchor=(0.995, 0.995),
+            ncol=3,
+            **legend_kw,
+        )
+    return ax
+
+
+def sensitivity_v_by_k(
+    *,
+    agg_v_by_k: pd.DataFrame,
+    agg_clipped_al90: pd.DataFrame,
+    path_stem: Path,
+    sigma_values: tuple[float, ...] | list[float],
+    k_values: tuple[int, ...] | list[int],
+) -> list[Path]:
+    """Two-row figure: (a–c) on top; (d) + spanning (e) below."""
+    sigma_values = tuple(float(s) for s in sigma_values)
+    k_values = tuple(int(k) for k in k_values)
+    if len(sigma_values) != 4:
+        raise ValueError("sensitivity_v_by_k expects four σ_R values.")
+
+    panel_fs = max(8, int(round(FONT_SIZE * PLOT_FONT_SCALE / 1.45)))
+    apply_paper_style(font_size=panel_fs)
+    tick_fs = max(6.5, float(panel_fs) - 1.5)
+
+    # Square panels for (a–d); (e) wider. No extra right margin (legend is in-axes).
+    left_in, right_in = 0.72, 0.28
+    top_in, bottom_in = 0.40, 0.52
+    col_gap_in, row_gap_in = 0.48, 0.78
+    panel_w_in = panel_h_in = 2.20
+    panel_e_h_in = 2.55
+    fig_w = left_in + 3.0 * panel_w_in + 2.0 * col_gap_in + right_in
+    fig_h = (
+        bottom_in
+        + max(panel_h_in, panel_e_h_in)
+        + row_gap_in
+        + panel_h_in
+        + top_in
+    )
+    fig = plt.figure(figsize=(fig_w, fig_h))
+    rects = _sensitivity_abc_de_layout(
+        fig,
+        left_in=left_in,
+        right_in=right_in,
+        top_in=top_in,
+        bottom_in=bottom_in,
+        col_gap_in=col_gap_in,
+        row_gap_in=row_gap_in,
+        panel_w_in=panel_w_in,
+        panel_h_in=panel_h_in,
+        panel_e_h_in=panel_e_h_in,
+    )
+    letter_fs = panel_fs + 1
+    config_specs = agreement_operator_specs()
+
+    y_max = float(agg_v_by_k["policy_violation_rate_ci_high"].max())
+    ylim = (-0.02, min(1.0, max(0.25, y_max * 1.12 + 0.02)))
+
+    for letter, sigma_r in zip(("a", "b", "c", "d"), sigma_values):
+        ax = fig.add_axes(rects[letter])
+        sub = agg_v_by_k[np.isclose(agg_v_by_k["sigma_r"].to_numpy(), float(sigma_r))]
+        plot_agreement_config_lines(
+            ax,
+            sub,
+            x_col="top_k",
+            group_col="config_id",
+            y_col="policy_violation_rate_mean",
+            ci_low_col="policy_violation_rate_ci_low",
+            ci_high_col="policy_violation_rate_ci_high",
+            specs=config_specs,
+            xlabel=r"Top-$K$ size",
+            ylabel=r"Policy violation rate $V$" if letter in ("a", "d") else "",
+            title=rf"$\sigma_R={sigma_r:.2f}$",
+            ylim=ylim,
+            show_legend=(letter == "b"),
+            legend_loc="lower right",
+            legend_bbox_to_anchor=(0.98, 0.12),
+            legend_fontsize=tick_fs,
+            legend_borderpad=0.45,
+            legend_labelspacing=0.55,
+            legend_borderaxespad=0.25,
+            legend_columnspacing=0.65,
+            legend_handletextpad=0.45,
+            xticks=k_values,
+        )
+        style_square_axes_frame(ax)
+        ax.tick_params(labelsize=tick_fs, length=3.5, width=1.0, direction="out")
+        for spine_name in ("left", "bottom"):
+            ax.spines[spine_name].set_linewidth(1.0)
+        add_panel_letter(ax, letter, font_size=letter_fs)
+
+    ax_e = fig.add_axes(rects["e"])
+    _plot_topk_composition_tile_grid(
+        ax_e,
+        agg_clipped_al90,
+        k_values=k_values,
+        sigma_values=sigma_values,
+        title=r"Top-$K$ composition under $A_L(0.9)$ (each tile $=100\%$)",
+        fontsize=tick_fs,
+        legend_fontsize=tick_fs,
+    )
+    add_panel_letter(ax_e, "e", font_size=letter_fs)
+
+    return save_figure(fig, path_stem, bbox_inches=None)
+
+
+def _plot_config_violins(
+    ax: Axes,
+    configs: tuple[tuple[str, np.ndarray], ...],
+    *,
+    R: np.ndarray,
+    Q: np.ndarray,
+    case_id: np.ndarray | None = None,
+    top_k: int = 10,
+    threshold: float = QUADRANT_THRESHOLD,
+    violin_width: float = 0.58,
+    top_k_annotate_ops: tuple[int, int] | None = (0, 1),
+    point_alpha_scale: float = 1.0,
+    show_title: bool = True,
+) -> None:
+    """Black-outline violins for several operator configurations, with stratum points."""
+    n_ops = len(configs)
+    positions = np.arange(1, n_ops + 1, dtype=float)
+    half_w = violin_width / 2.0
+    masks = _context_strata_masks(R, Q, threshold=threshold)
+    y_grid = np.linspace(0.0, 1.0, 220)
+    jitter_rng = np.random.default_rng(10_010)
+    top_k_cutoffs: dict[int, float] = {}
+    top_k_half_at: dict[int, object] = {}
+    top_k_values: dict[int, np.ndarray] = {}
+    labels: list[str] = []
+
+    for i_op, (label, values) in enumerate(configs):
+        labels.append(label)
+        pos = float(positions[i_op])
+        values = np.asarray(values, dtype=float)
+        half_at = _violin_halfwidth_interpolator(values, half_w=half_w, y_grid=y_grid)
+
+        for style in STRATA_STYLE:
+            overlay = values[masks[style["key"]]]
+            if overlay.size == 0:
+                continue
+            local_half = half_at(overlay) * 0.92
+            jitter = jitter_rng.uniform(-1.0, 1.0, size=overlay.size) * local_half
+            ax.scatter(
+                pos + jitter,
+                overlay,
+                s=style["size"] * 0.70,
+                c=style["color"],
+                marker="o",
+                alpha=min(1.0, style["alpha"] * point_alpha_scale),
+                linewidths=0,
+                zorder=1 + 0.1 * style["zorder"],
+            )
+
+        parts = ax.violinplot(
+            [values],
+            positions=[pos],
+            widths=violin_width,
+            showmeans=False,
+            showmedians=True,
+            showextrema=False,
+        )
+        for body in parts["bodies"]:
+            body.set_facecolor("none")
+            body.set_alpha(1.0)
+            body.set_edgecolor("black")
+            body.set_linewidth(1.2)
+            body.set_zorder(6)
+        if parts.get("cmedians") is not None:
+            parts["cmedians"].set_color("black")
+            parts["cmedians"].set_linewidth(1.15)
+            parts["cmedians"].set_zorder(8)
+
+        p_cutoff = _top_k_p_cutoff(values, R=R, case_id=case_id, K=top_k)
+        top_k_cutoffs[i_op] = p_cutoff
+        top_k_half_at[i_op] = half_at
+        top_k_values[i_op] = values
+        ax.plot(
+            [pos - half_w, pos + half_w],
+            [p_cutoff, p_cutoff],
+            color="black",
+            linestyle="--",
+            linewidth=1.05,
+            dashes=(3.0, 2.0),
+            zorder=9,
+            clip_on=True,
+        )
+
+    ax.set_xticks(positions)
+    ax.set_xticklabels(labels)
+    ax.set_xlabel("")
+    ax.set_ylabel(r"Aggregated score $P$")
+    ax.set_ylim(-0.02, 1.02)
+    ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    if show_title:
+        ax.set_title(rf"Top-$K$ cutoffs, $K={top_k}$", pad=4)
+    if top_k_annotate_ops is not None:
+        i_a, i_b = top_k_annotate_ops
+        x_a = float(positions[i_a])
+        x_b = float(positions[i_b])
+        x_text = 0.5 * (x_a + x_b)
+        y_text = 0.9
+        ann_fs = max(7.0, float(ax.yaxis.label.get_size()) - 0.5)
+        edge_outside = 0.03
+        for x_pos, i_op, toward_center in ((x_a, i_a, +1.0), (x_b, i_b, -1.0)):
+            values = top_k_values[i_op]
+            y_cut = top_k_cutoffs[i_op]
+            y_top = float(np.max(values))
+            y_target = 0.5 * (y_cut + y_top)
+            edge_half = float(top_k_half_at[i_op](y_target))
+            x_target = x_pos + toward_center * (edge_half + edge_outside)
+            ax.annotate(
+                "",
+                xy=(x_target, y_target),
+                xytext=(x_text, y_text),
+                textcoords="data",
+                arrowprops={
+                    "arrowstyle": "-|>",
+                    "color": "black",
+                    "linewidth": 0.9,
+                    "shrinkA": 8,
+                    "shrinkB": 0,
+                },
+                zorder=10,
+            )
+        ax.text(
+            x_text,
+            y_text,
+            r"Top-$K$",
+            ha="center",
+            va="center",
+            fontsize=ann_fs,
+            fontweight="bold",
+            color="black",
+            zorder=11,
+            bbox={
+                "boxstyle": "round,pad=0.15",
+                "facecolor": "white",
+                "edgecolor": "none",
+                "alpha": 0.85,
+            },
+        )
+    style_axes_frame(ax)
+
+
+def attrition_case_overview(
+    *,
+    scores: pd.DataFrame,
+    path_stem: Path,
+    top_k: int = 10,
+) -> list[Path]:
+    """One-row figure: (a) $(R,Q)$ scatter (1/3); (b) seven-operator violins (2/3)."""
+    panel_fs = max(8, int(round(FONT_SIZE * PLOT_FONT_SCALE / 1.45)))
+    apply_paper_style(font_size=panel_fs)
+
+    R = scores["R"].to_numpy(dtype=float)
+    Q = scores["Q"].to_numpy(dtype=float)
+    is_veto = Q <= 0.0
+    case_id = np.arange(len(scores), dtype=int)
+
+    col_by_cfg = {
+        "linear@0.10": "P_AL_0.10",
+        "linear@0.50": "P_AL_0.50",
+        "linear@0.90": "P_AL_0.90",
+        "geometric@0.10": "P_AG_0.10",
+        "geometric@0.50": "P_AG_0.50",
+        "geometric@0.90": "P_AG_0.90",
+        "min": "P_AM",
+    }
+    configs = tuple(
+        (label, scores[col_by_cfg[cid]].to_numpy(dtype=float))
+        for cid, _op, _lam, label in agreement_operator_specs()
+    )
+
+    left_in, right_in = 0.72, 0.28
+    top_in, bottom_in = 0.42, 0.55
+    col_gap_in = 0.48
+    panel_h_in = 2.20
+    scatter_w_in = 2.20
+    violin_w_in = 4.40
+    fig_w = left_in + scatter_w_in + col_gap_in + violin_w_in + right_in
+    fig_h = bottom_in + panel_h_in + top_in
+    fig = plt.figure(figsize=(fig_w, fig_h))
+
+    def _rect(x_in: float, w_in: float) -> tuple[float, float, float, float]:
+        return (x_in / fig_w, bottom_in / fig_h, w_in / fig_w, panel_h_in / fig_h)
+
+    letter_fs = panel_fs + 1
+    scatter_y_top = 1.22
+
+    ax_a = fig.add_axes(_rect(left_in, scatter_w_in))
+    _draw_rq_scatter(ax_a, R, Q, is_veto, alpha_scale=1.35)
+    style_square_axes_frame(ax_a)
+    ax_a.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    _finish_panel_a_legend(ax_a, y_top=scatter_y_top, legend_y=0.98)
+    add_panel_letter(ax_a, "a", font_size=letter_fs)
+
+    ax_b = fig.add_axes(_rect(left_in + scatter_w_in + col_gap_in, violin_w_in))
+    _plot_config_violins(
+        ax_b,
+        configs,
+        R=R,
+        Q=Q,
+        case_id=case_id,
+        top_k=top_k,
+        top_k_annotate_ops=(0, 1),
+        point_alpha_scale=1.35,
+        show_title=False,
+    )
+    add_panel_letter(ax_b, "b", font_size=letter_fs)
+
+    return save_figure(fig, path_stem, bbox_inches=None)
+
+
+# Column map shared by attrition overview / bump chart.
+_ATTRITION_P_COL_BY_CFG: dict[str, str] = {
+    "linear@0.10": "P_AL_0.10",
+    "linear@0.50": "P_AL_0.50",
+    "linear@0.90": "P_AL_0.90",
+    "geometric@0.10": "P_AG_0.10",
+    "geometric@0.50": "P_AG_0.50",
+    "geometric@0.90": "P_AG_0.90",
+    "min": "P_AM",
+}
+
+
+def attrition_rank_bump(
+    *,
+    scores: pd.DataFrame,
+    path_stem: Path,
+    top_k: int = 10,
+    baseline_cfg: str = "linear@0.50",
+    delta_vs_baseline: bool = False,
+) -> list[Path]:
+    """Bump chart of rank trajectories for the Top-$K$ under $A_L(0.5)$.
+
+    Only employees in the baseline Top-$K$ are drawn (no ghost entrants).
+    The y-axis is hidden; employee names label the leftmost markers.
+
+    If ``delta_vs_baseline`` is True, non-baseline tracks show a white
+    ``+/-`` rank-change label relative to the baseline rank (or a solid
+    series-coloured ball when the rank is unchanged). The baseline track
+    always shows absolute ranks in hollow markers.
+    """
+    from bumplot.bezier import bezier_curve
+
+    panel_fs = max(8, int(round(FONT_SIZE * PLOT_FONT_SCALE / 1.45)))
+    apply_paper_style(font_size=panel_fs)
+    label_fs = max(7.0, float(panel_fs) - 0.5)
+    rank_fs = max(5.5, label_fs - 1.5)
+    delta_fs = max(5.5, label_fs - 1.5)
+
+    specs = agreement_operator_specs()
+    cfg_ids = [cid for cid, *_ in specs]
+    x_labels = [label for *_, label in specs]
+    if baseline_cfg not in _ATTRITION_P_COL_BY_CFG:
+        raise ValueError(f"Unknown baseline config: {baseline_cfg}")
+    if baseline_cfg not in cfg_ids:
+        raise ValueError(f"Baseline {baseline_cfg} not in agreement_operator_specs()")
+
+    R = scores["R"].to_numpy(dtype=float)
+    row_id = np.arange(len(scores), dtype=int)
+    names = scores["Case_ID"].astype(str).to_numpy()
+
+    rank_matrix = np.column_stack(
+        [
+            priority_ranks(
+                scores[_ATTRITION_P_COL_BY_CFG[cid]].to_numpy(dtype=float),
+                R=R,
+                case_id=row_id,
+            )
+            for cid in cfg_ids
+        ]
+    )
+    baseline_col = cfg_ids.index(baseline_cfg)
+    baseline_P = scores[_ATTRITION_P_COL_BY_CFG[baseline_cfg]].to_numpy(dtype=float)
+    top_idx = top_k_indices(baseline_P, int(top_k), R=R, case_id=row_id)
+    # Preserve baseline rank order (1 → K) for colour assignment.
+    top_idx = top_idx[np.argsort(rank_matrix[top_idx, baseline_col])]
+
+    n_tracks = len(cfg_ids)
+    x_positions = np.arange(n_tracks, dtype=float)
+    traj = rank_matrix[top_idx, :]
+    max_rank = int(traj.max()) if traj.size else int(top_k)
+    y_upper = max(max_rank + 1, int(top_k) + 1)
+
+    left_in, right_in = 1.35, 0.35
+    top_in, bottom_in = 0.28, 0.55
+    plot_w_in = 2.20 + 0.48 + 4.40  # same content width as attrition overview
+    plot_h_in = 2.70 * 2.20  # taller so markers separate more vertically
+    fig_w = left_in + plot_w_in + right_in
+    fig_h = bottom_in + plot_h_in + top_in
+    fig = plt.figure(figsize=(fig_w, fig_h))
+    ax = fig.add_axes(
+        (
+            left_in / fig_w,
+            bottom_in / fig_h,
+            plot_w_in / fig_w,
+            plot_h_in / fig_h,
+        )
+    )
+    style_axes_frame(ax)
+
+    # Light band covering ranks 1…Top-K; right gutter inside the band holds the label.
+    x_plot_left = -0.35
+    x_band_left = -0.12  # after names, just before the first markers
+    x_last = float(n_tracks - 1)
+    # Right gutter for the Top-K label (2/3 of the previous width).
+    right_gutter = 0.55 * (2.0 / 3.0)
+    x_band_right = x_last + right_gutter
+    topk_y0, topk_y1 = 0.5 - 0.35, float(top_k) + 0.5 + 0.35
+    ax.add_patch(
+        Rectangle(
+            (x_band_left, topk_y0),
+            x_band_right - x_band_left,
+            topk_y1 - topk_y0,
+            facecolor="#E6E6E6",
+            edgecolor="none",
+            linewidth=0.0,
+            zorder=0,
+            clip_on=False,
+        )
+    )
+    ax.text(
+        x_last + 0.38 * (2.0 / 3.0),
+        0.5 * (0.5 + float(top_k) + 0.5),
+        rf"Top-{int(top_k)}",
+        rotation=-90,
+        ha="center",
+        va="center",
+        color="black",
+        fontsize=label_fs,
+        fontweight="medium",
+        clip_on=False,
+        zorder=1,
+    )
+
+    for i, idx in enumerate(top_idx):
+        ranks = traj[i].astype(float)
+        color = OKABE_ITO[i % len(OKABE_ITO)]
+        disp = float(ranks.max() - ranks.min())
+        lw = 2.6 if disp >= 3.0 else 1.6
+        weight = "bold" if disp >= 3.0 else "normal"
+        base_rank = int(ranks[baseline_col])
+
+        vertices, codes = bezier_curve(x_positions, ranks, force=0.55)
+        ax.add_patch(
+            PathPatch(
+                MplPath(vertices, codes),
+                facecolor="none",
+                edgecolor=color,
+                linewidth=lw,
+                alpha=0.92,
+                zorder=2,
+            )
+        )
+
+        for j, (x, rank) in enumerate(zip(x_positions, ranks)):
+            r_int = int(rank)
+            if (not delta_vs_baseline) or j == baseline_col:
+                ax.scatter(
+                    [x],
+                    [rank],
+                    s=160,
+                    facecolors="white",
+                    edgecolors=color,
+                    linewidths=1.4,
+                    zorder=4,
+                )
+                ax.text(
+                    float(x),
+                    float(rank),
+                    f"{r_int}",
+                    ha="center",
+                    va="center",
+                    color="black",
+                    fontsize=rank_fs,
+                    fontweight="bold",
+                    zorder=5,
+                    clip_on=True,
+                )
+                continue
+
+            delta = r_int - base_rank
+            if delta == 0:
+                ax.scatter(
+                    [x],
+                    [rank],
+                    s=160,
+                    facecolors=color,
+                    edgecolors="white",
+                    linewidths=1.0,
+                    zorder=4,
+                )
+            else:
+                ax.scatter(
+                    [x],
+                    [rank],
+                    s=160,
+                    facecolors="white",
+                    edgecolors=color,
+                    linewidths=1.4,
+                    zorder=4,
+                )
+                ax.text(
+                    float(x),
+                    float(rank),
+                    f"{delta:+d}",
+                    ha="center",
+                    va="center",
+                    color="black",
+                    fontsize=delta_fs,
+                    fontweight="bold",
+                    zorder=5,
+                    clip_on=True,
+                )
+
+        ax.annotate(
+            names[idx],
+            (x_positions[0], ranks[0]),
+            textcoords="offset points",
+            xytext=(-12, 0),
+            fontsize=label_fs,
+            ha="right",
+            va="center",
+            color=color,
+            fontweight=weight,
+            clip_on=False,
+        )
+
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(x_labels, fontsize=panel_fs)
+    ax.set_xlim(x_plot_left, x_band_right)
+    # Extra headroom so top markers (rank 1) are not clipped by the axes.
+    ax.set_ylim(-0.7, y_upper + 0.3)
+    ax.invert_yaxis()
+    ax.yaxis.set_visible(False)
+    ax.spines["left"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.tick_params(axis="x", length=3.5, width=1.0, direction="out", labelsize=panel_fs)
+    ax.set_xlabel("")
 
     return save_figure(fig, path_stem, bbox_inches=None)

@@ -14,7 +14,7 @@ sizes, seeds, λ grids, or figure settings in experiment scripts.
 | `config.py` | Population (`VETO_FRACTION` → group sizes), Monte Carlo, λ grids, σ_R sensitivity grid, figure export flags, operator colours |
 | `aggregators.py` | Linear, weighted geometric, and minimum operators with a common interface |
 | `generators.py` | Beta-distributed $(R_i,Q_i)$ populations, contextual-veto injection, score uncertainty on $R$, contextual noise on $Q$ |
-| `metrics.py` | Policy violation, VPR/compliance, predictive utility, Top-$K$ composition, Kendall τ (full / Top-$K$ union), Jaccard Top-$K$ |
+| `metrics.py` | Policy violation, VPR/compliance, predictive utility, Top-$K$ composition, Kendall τ (full / Top-$K$ union), Jaccard Top-$K$, clipped/veto Top-$K$ shares |
 | `plotting.py` | Publication style (Okabe–Ito / Helvetica) plus bar, line, box, overview, and sensitivity helpers |
 | `utils.py` | Seeds, mean/std/CI aggregation, fingerprints, LaTeX table writer |
 
@@ -23,7 +23,8 @@ sizes, seeds, λ grids, or figure settings in experiment scripts.
 | Folder | Focus |
 |---|---|
 | `01_policy_compliance_under_contextual_vetoes` | Veto compliance and $V(\lambda)$; ranking stability vs $\lambda=0.5$ |
-| `02_sensitivity_analysis` | Gaussian noise on $R$ only; $V$, τ, Jaccard vs clean; pairwise operator agreement |
+| `02_sensitivity_analysis` | Gaussian noise on $R$ only; $V$, τ, Jaccard vs clean; pairwise operator agreement; $V(K)$ sweep |
+| `03_attrition_case_study` | CADEMAS-ML offline scoring on 100 real-style cases using H2O MOJOs + fuzzy context; exports $R$, $Q$, and seven operator-specific $P$ columns |
 
 ## Operator definitions
 

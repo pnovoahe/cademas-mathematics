@@ -53,7 +53,21 @@ $^{2}$ \quad Dept. Computer Science and Artificial Intelligence, Universidad de 
 \corres{Correspondence: pnovoahe@ull.edu.es}
 
 % Abstract placeholder (to be rewritten with the new structure)
-\abstract{To be rewritten.}
+\abstract{
+Cooperative automated decision-making systems increasingly combine predictive
+assessments with contextual knowledge to prioritize alternatives under
+resource constraints. Although the aggregation of these sources is often
+treated as a technical integration step, the choice of aggregation operator
+can determine whether contextual policies are preserved or overridden by
+predictive evidence. This paper investigates this issue in the context of
+CADEMAS-ML, focusing on the integration of a predictive risk score $R$ and a
+contextual alignment score $Q$. We analyze three aggregation regimes---linear,
+weighted geometric, and minimum aggregation---from complementary theoretical,
+simulation, and application perspectives. The theoretical analysis
+characterizes the conditions under which contextual vetoes ($Q=0$) are
+preserved through aggregation and shows how compensatory operators can violate such restrictions. Controlled Monte Carlo experiments then examine policy compliance, sensitivity to predictive-score uncertainty, ranking stability, and the effect of the intervention capacity on the resulting Top-$K$ set.
+Finally, an employee-attrition case study based on a reproducible CADEMAS-ML workflow illustrates how changing only the aggregation semantics can alter the employees selected for intervention. The results show that aggregation is not a neutral implementation choice: under the conditions considered, zero-absorbing operators preserve contextual vetoes, whereas compensatory linear aggregation can admit vetoed alternatives, particularly when predictive evidence receives greater weight. Predictive uncertainty can further modify the prioritization and interact with the available intervention capacity without eliminating these structural differences. The study therefore highlights aggregation semantics as an explicit policy and governance choice in cooperative automated decision-making, rather than merely a numerical mechanism for combining scores.
+}
 
 % Keywords
 \keyword{
@@ -74,33 +88,125 @@ prioritization
 % ==============================================================================
 
 \section{Introduction}
+\label{sec:introduction}
 
-% R1-1, R2-2
-% Posicionar claramente la novedad.
-% No proponemos un nuevo operador ni un nuevo método fuzzy MCDM.
-% La contribución es metodológica: estudiar la agregación como mecanismo
-% de gobernanza dentro de una arquitectura cooperativa ADM.
+Automated decision-making increasingly relies on the integration of heterogeneous
+sources of evidence. Predictive models can estimate the likelihood or severity
+of an outcome, while contextual knowledge can express organizational
+requirements, constraints, preferences, or policy considerations that are not
+necessarily captured by the predictive model itself. In cooperative automated
+decision-making settings, these sources may be produced by partially
+independent decision-making components and subsequently integrated into a
+common prioritization mechanism. The resulting priority scores can then be
+used to allocate scarce resources, for example by selecting a fixed number of
+alternatives for intervention. In such settings, the integration mechanism
+becomes an essential part of the decision policy rather than a merely
+technical post-processing step.
 
-% R2-3
-% Introducir explícitamente los research questions (RQ1-RQ4).
+This observation raises a fundamental question: \emph{what happens when
+different aggregation semantics are used to integrate predictive and
+contextual evidence?} In particular, a contextual assessment may encode a
+hard or veto-like requirement, such that an alternative with $Q_i=0$ should
+not be prioritized regardless of its predictive score $R_i$. A compensatory
+aggregation operator, however, may allow sufficiently large predictive
+evidence to offset a complete contextual deficiency. Conversely,
+non-compensatory operators may preserve the contextual restriction by
+assigning zero priority whenever the corresponding contextual condition is
+not satisfied. These alternatives can lead to substantially different
+rankings and, under a resource constraint, to different sets of alternatives
+receiving an intervention. Consequently, aggregation semantics can determine
+whether a policy encoded in the contextual layer is preserved or weakened
+during the final integration stage.
 
-% R2-4
-% Al final de la sección incluir la tabla cronológica de literatura
-% (o referenciarla si se coloca en Background).
+The issue becomes more relevant when predictive assessments are uncertain.
+Prediction errors can modify the relative ordering of alternatives and can
+therefore propagate beyond the score level into the actual intervention set.
+Moreover, the effect of such perturbations may depend on the aggregation
+operator, its parameters, and the available intervention capacity. A useful
+analysis must therefore consider not only the mathematical properties of the
+aggregation functions, but also their consequences for policy compliance,
+ranking stability, and resource-constrained Top-$K$ selection.
 
-% R1-12, R2-6
-% Justificar desde el principio por qué se estudian tres regímenes:
-% compensatorio, parcialmente compensatorio y no compensatorio.
+Existing research provides a broad range of aggregation mechanisms in
+decision analysis and fuzzy multi-criteria decision-making, while cooperative
+automated decision-making frameworks provide architectures for combining
+multiple sources of decision evidence. However, the consequences of choosing
+a particular aggregation semantics for the preservation of contextual
+vetoes and the resulting prioritization behavior have not been systematically
+characterized in the CADEMAS-ML setting. In particular, there is a need to
+connect the structural properties of aggregation operators with observable
+decision-level consequences, including policy violations, sensitivity to
+predictive uncertainty, and changes in the alternatives selected under a
+fixed intervention budget.
 
-\subsection{Research Questions and Contributions}
+This paper addresses this gap by analyzing the integration of predictive and
+contextual scores in CADEMAS-ML through three representative aggregation
+regimes: a compensatory linear operator, a weighted geometric operator, and a
+minimum operator. The analysis combines formal results with controlled
+Monte Carlo experiments and an employee-attrition case study. The theoretical
+analysis establishes conditions under which contextual vetoes are preserved
+or can be violated. The simulation study then examines policy compliance,
+the effect of predictive-score perturbations, ranking agreement, and the
+dependence of observed violations on the Top-$K$ intervention capacity.
+Finally, the case study applies the same aggregation alternatives to a
+reproducible CADEMAS-ML workflow in which predictive and contextual scores
+are generated independently before being integrated into the final
+prioritization.
 
-% R2-3
-% Formular RQ1-RQ4.
-% Enumerar contribuciones metodológicas y experimentales.
+The main contributions of this work are as follows:
+\begin{itemize}
+    \item We formally characterize the relationship between aggregation
+    semantics and contextual veto preservation, identifying zero absorption
+    as the key structural property for maintaining a zero contextual score
+    through the integration stage.
+    
+    \item We provide a theoretical and empirical analysis of how compensatory
+    and zero-absorbing aggregation operators affect policy compliance and
+    resource-constrained prioritization under controlled population
+    conditions.
+    
+    \item We investigate the sensitivity of the resulting prioritization to
+    predictive uncertainty, including its effects on policy violations,
+    ranking stability, inter-operator agreement, and the composition of
+    Top-$K$ intervention sets.
+    
+    \item We demonstrate the practical relevance of these differences through
+    a reproducible employee-attrition case study, showing that changing only
+    the aggregation semantics can alter the composition of a fixed
+    intervention budget.
+\end{itemize}
+
+The remainder of the paper is organized as follows. Section
+\ref{sec:background-related-work} presents the background and related work,
+covering the foundations of cooperative automated decision-making, fuzzy
+multi-criteria decision-making, and aggregation theory, and formulates the
+research questions addressed in this study. Section~\ref{sect:cademas}
+introduces the CADEMAS architecture and its CADEMAS-ML specialization.
+Section~\ref{sect:aggregation-theory} presents the aggregation operators
+considered and their theoretical analysis in terms of structural properties
+and policy implications. Section~\ref{sect:simulation} describes the
+controlled simulation experiments, their sensitivity analysis, and the
+employee-attrition case study. Section~\ref{sec:discussion}
+discusses the implications of the findings, their relationship to aggregation
+theory and fuzzy MCDM, and the limitations of the study. Finally,
+Section~\ref{sec:conclusions-future-work} summarizes the conclusions and
+outlines directions for future research.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Background and Related Work}
+\label{sec:background-related-work}
+
+This section establishes the conceptual and methodological foundations of the
+study. It first introduces the cooperative automated decision-making setting
+in which predictive and contextual assessments are integrated, and then
+reviews the relevant foundations from fuzzy multi-criteria decision making
+and aggregation theory. Particular attention is given to aggregation
+properties that determine whether evidence from one decision pathway can
+compensate for deficiencies in another. The section concludes by positioning
+the present study with respect to existing CADEMAS-ML and aggregation-based
+approaches and by formulating the research questions that guide the subsequent
+theoretical, simulation, and case-study analyses.
 
 % R1-1, R2-2, R2-3, R2-4
 % Construir el gap de investigación.
@@ -859,7 +965,7 @@ is invariant under changes of \(\lambda\), so any comparison across
 integration regimes leaves the minimum operator unchanged by construction.
 This point matters when reading the \(\lambda\)-dependent results of
 Sections~\ref{subsec:simulation-policy-compliance}
-and~\ref{subsec:simulation-sensitivity-analysis}.}
+and~\ref{sec:sensitivity-analysis}.}
 
 \end{enumerate}
 
@@ -872,6 +978,7 @@ introduced in the previous subsection.
 \label{tab:operator-properties}
 \centering
 \renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}c@{}}
 \begin{tabular}{lccc}
 \toprule
 Property & Linear & Geometric & Minimum \\
@@ -884,17 +991,19 @@ Contextual veto preservation & No\textsuperscript{\(\dagger\)} & Yes & Yes \\
 {\color{teal}Strict positivity on \((0,1]^2\)} & {\color{teal}Yes} & {\color{teal}Yes} & {\color{teal}Yes} \\
 Compensability & Full\textsuperscript{\(\ddagger\)} & Partial & No \\
 \bottomrule
-\end{tabular}
-
-\raggedright
+\end{tabular}\\[0.4em]
+\begin{minipage}{\linewidth} 
+\raggedright\footnotesize
 {\color{red}\textsuperscript{\(\dagger\)} For the linear operator, zero absorption and contextual veto preservation hold only in the degenerate case \(\lambda=0\).}\\
 {\color{red}\textsuperscript{\(\ddagger\)} Full compensability for the linear operator is understood for \(\lambda\in(0,1)\), with compensation bounded by the \([0,1]\) scale.}
+\end{minipage}
+\end{tabular}
 \end{table}
 
 {\color{teal}All three operators are strictly positive on the interior, so
 they differ only in zero absorption. This isolates the property
 responsible for the contrasting policy behaviour reported in
-Section~\ref{sec:simulation-results}: the operators agree on which
+Section~\ref{sect:simulation}: the operators agree on which
 alternatives deserve a positive score and disagree only on whether a
 contextual veto can be overridden.}
 
@@ -1187,7 +1296,7 @@ constants $L_R$ and $L_Q$ quantify the maximum amplification of
 perturbations on the particular region considered; they do not by
 themselves establish a global ordering of operators or the stability of a
 population-level Top-$K$ decision. Those questions are examined
-empirically in Section~\ref{sec:simulation-results}.}
+empirically in Section~\ref{sect:simulation}.}
 
 For the linear aggregation operator,
 $A_L(R,Q)=\lambda R+(1-\lambda)Q$,
@@ -1255,7 +1364,7 @@ is non-smooth yet uniformly bounded. Smoothness and robustness are thus not
 equivalent here. These are score-level bounds, however, and they do not by
 themselves determine how stable the induced ranking is; that question is
 addressed empirically in
-Section~\ref{subsec:simulation-sensitivity-analysis}.}
+Section~\ref{sec:sensitivity-analysis}.}
 
 These analytical differences motivate the robustness experiments
 conducted in the following sections. Rather than evaluating aggregation
@@ -1414,86 +1523,120 @@ The first experiment examines the population-level consequences of the
 contextual veto property established in
 Section~\ref{subsec:veto-preservation}. It addresses \textit{RQ2} by asking
 when the aggregation semantics preserve a contextual exclusion and when
-predictive evidence can compensate for it. The experiment therefore focuses
-on the interaction between aggregation and prioritization rather than on
-overall predictive performance.
+predictive evidence can compensate for it. The focus is therefore not on
+overall predictive performance, but on how the aggregation rule translates
+the two information sources into a prioritization.
 
-We construct a controlled stress population in which $20\%$ of the
-$N=1000$ alternatives are contextual vetoes, represented by $Q_i=0$. These
-alternatives are deliberately assigned comparatively high predictive scores,
-so that prediction and contextual admissibility are placed in direct
-conflict. The remaining alternatives provide both aligned and conflicting
-combinations of $R_i$ and $Q_i$. In particular, the $(R,Q)$ plane is
-partitioned by $R=0.5$ and $Q=0.5$ to distinguish cases in which predictive
-and contextual evidence broadly agree from those in which they disagree,
-including contextually weak cases with high predictive scores
-($Q$-weak) and predictively weak cases with high contextual scores
-($R$-weak). The prioritization selects the $K=100$ highest aggregated
-scores. Since $N-N_V=800\geq K$, the supply condition of
-Corollary~\ref{cor:topk-exclusion} is satisfied.
+A controlled stress population was constructed with $N=1000$ alternatives,
+of which $20\%$ are contextual vetoes, represented by $Q_i=0$. These
+alternatives are deliberately assigned comparatively high predictive
+scores, creating a direct conflict between predictive evidence and
+contextual admissibility. The remaining alternatives cover both aligned and
+conflicting combinations of $R_i$ and $Q_i$. A dense sweep of
+$\lambda\in[0,1]$ is used for the linear and weighted geometric operators,
+while the minimum operator is included as a reference because it is
+independent of $\lambda$. For every value of $\lambda$, $1000$ independent
+Monte Carlo populations are generated and the resulting Top-$K$ selections
+are evaluated with $K=100$. Since $800$ non-vetoed alternatives remain, the
+population satisfies the supply condition
+$N-N_V\geq K$ required by
+Corollary~\ref{cor:topk-exclusion}.
 
-Figure~\ref{fig:policy-violation} illustrates the resulting behaviour.
-Panel~(a) shows the structure of the synthetic population in the $(R,Q)$
-plane. Panels~(b)--(d) use the same population from one representative
-Monte Carlo replication to show the distributions of the aggregated score
-$P_i$ for the three operators at $\lambda=0.10$, $0.50$, and $0.90$,
-respectively. The dashed horizontal line in each distribution is the
-Top-$K$ cutoff for that configuration, while the overlaid markers identify
-the corresponding vetoed alternatives. These panels should be read
-together: panel~(a) identifies where the potentially conflicting cases
-originate, whereas panels~(b)--(d) show how the aggregation semantics
-translate those conflicts into the score used for prioritization. Panel~(e)
-then moves from this illustrative population to the Monte Carlo experiment,
-reporting the mean policy violation rate over the dense
-$\lambda\in[0,1]$ sweep.
+Figure~\ref{fig:policy-violation}(a) gives the main population-level result.
+For low values of $\lambda$, all three operators produce zero observed
+policy violations. As predictive evidence receives more weight, however,
+the linear operator departs from this behaviour. Its violation rate becomes
+positive at approximately $\lambda=0.7$ and increases thereafter, reaching
+$V=0.64$ at $\lambda=1.0$ (95\% percentile interval
+$[0.55,0.73]$). The weighted geometric and minimum operators remain at
+$V=0$ throughout the sweep. The onset around $\lambda=0.7$ is specific to
+the simulated population and should therefore not be interpreted as a
+universal threshold for the linear operator.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/policy_compliance_overview.pdf}
     \caption{Policy compliance under contextual vetoes ($N=1000$, $K=100$).
-    (\textbf{a})~Illustrative population in the $(R,Q)$ plane, including
+    (\textbf{a})~Monte Carlo mean policy violation rate over
+    $\lambda\in[0,1]$ across $1000$ replications; shaded bands indicate
+    $95\%$ percentile intervals.
+    (\textbf{b})~Illustrative population in the $(R,Q)$ plane, including
     contextually vetoed cases ($Q_i=0$) and non-veto cases with different
     predictive--contextual profiles.
-    (\textbf{b}--\textbf{d})~Aggregated-score distributions for
+    (\textbf{c}--\textbf{e})~Aggregated-score distributions for
     $A_L$, $A_G$, and $A_M$ at $\lambda=0.10$, $0.50$, and $0.90$,
     respectively, for the same population. The dashed line indicates the
-    Top-$K$ cutoff and the overlaid points identify vetoed cases.
-    (\textbf{e})~Monte Carlo mean policy violation rate over
-    $\lambda\in[0,1]$ across $1000$ replications; shaded bands indicate
-    $95\%$ percentile intervals.}
+    Top-$K$ cutoff and the overlaid points identify vetoed cases.}
     \label{fig:policy-violation}
 \end{figure}
 
-At low predictive weight, the three operators produce the same qualitative
-compliance outcome. The distinction becomes visible as $\lambda$ increases.
-For the linear operator, vetoed alternatives with $Q_i=0$ and $R_i>0$
-receive positive aggregated scores. Consequently, their scores move
-upwards through the distribution as predictive evidence receives greater
-weight. In the representative population, this movement can be seen
-directly in panels~(b)--(d): the veto markers for $A_L$ progressively
-approach and eventually cross the Top-$K$ cutoff. The corresponding
-population-level effect appears in panel~(e). The mean violation rate
-remains zero at low $\lambda$, becomes positive at approximately
-$\lambda=0.70$, and reaches
-$V=0.462$ at $\lambda=0.90$ (95\% percentile interval
-$[0.370,0.550]$). The precise onset is a property of the simulated
-population rather than a universal critical value of the linear operator.
+The remaining panels help trace this population-level pattern back to the
+individual scores. Panel~(b) shows the first Monte Carlo population in the
+$(R,Q)$ plane. The lines at $R=0.5$ and $Q=0.5$ separate broadly aligned
+cases, where predictive and contextual evidence point in the same
+direction, from conflicting cases, where one source is relatively strong
+while the other is weak. The vetoed alternatives form the horizontal
+$Q_i=0$ band in the high-$R$ region. This makes the intended stress
+condition visible directly: the cases that should be excluded are also
+among those that prediction would otherwise favour.
 
-The behaviour of the weighted geometric and minimum operators is different
-for a structural reason. Both are zero-absorbing, so
-$Q_i=0$ implies $P_i=0$ regardless of the value of $R_i$ or of $\lambda$.
-This is visible in panels~(b)--(d), where the vetoed alternatives remain on
-the zero-score boundary even as the distribution of non-vetoed alternatives
-changes. Because at least $K$ non-vetoed alternatives remain and satisfy the
-positivity condition required by Corollary~\ref{cor:topk-exclusion}, these
-zero-valued vetoes cannot enter the Top-$K$ set. Hence the observed
-$V=0$ across the entire $\lambda$ sweep is a deterministic consequence of
-the theoretical conditions, rather than evidence of an empirical
-performance advantage.
+Panels~(c)--(e) follow these same alternatives after aggregation. The
+dashed horizontal line marks the score of the $K$-th selected alternative,
+so points above it are competitive for Top-$K$ selection. At
+$\lambda=0.10$ and $0.50$, the vetoed cases remain outside this region for
+the linear operator, although their scores are already spread above zero.
+At $\lambda=0.90$, their scores have moved sufficiently upward for some of
+them to reach the Top-$K$ boundary. The weighted geometric and minimum
+operators show a different pattern: their vetoed cases remain at
+$P_i=0$ independently of $\lambda$, while the non-vetoed population is
+redistributed above this boundary. The figure therefore makes visible the
+mechanism behind the transition observed in panel~(a): violations arise
+when a compensatory aggregation rule allows predictive evidence to lift a
+vetoed alternative into competition with admissible alternatives.
 
-\begin{figure}[H]
+This distinction follows directly from the theoretical results. By
+Theorem~\ref{thm:veto-preservation}, zero absorption implies that
+$Q_i=0$ is propagated to a zero aggregated score. Corollary
+\ref{cor:topk-exclusion} then adds the population-level requirement needed
+to turn this score-level property into Top-$K$ exclusion. Both conditions
+hold in the present design for $A_G$ and $A_M$, explaining why their
+zero violation rate is deterministic rather than an empirical indication
+of superior performance. The linear operator does not satisfy zero
+absorption, so the theory provides no corresponding exclusion guarantee.
+Its behaviour instead depends on the distribution of predictive and
+contextual scores, which is precisely what the dense sweep quantifies. 
+
+The consequences extend beyond explicit vetoes to the final 
+prioritization. Figure~\ref{fig:policy-operator-agreement} compares the
+rankings and Top-$K$ sets produced by seven representative configurations:
+$A_L$ and $A_G$ at $\lambda\in\{0.10,0.50,0.90\}$, together with $A_M$.
+Kendall's $\tau_b$ measures agreement between the complete aggregated-score
+rankings, whereas Jaccard similarity measures the overlap between the
+selected Top-$K$ sets. At balanced weighting, the compensatory operators
+with same $\lambda$ values remain relatively close: for example, $A_L(0.50)$ and $A_G(0.50)$ have
+mean $\tau_b>0.88$ (Fig. \ref{fig:policy-operator-agreement}-(a)). In contrast, configurations that combine different
+aggregation semantics and strongly different predictive weights can
+diverge substantially. The comparison between $A_L(0.90)$ and
+$A_G(0.10)$, for instance, gives mean $\tau_b<0$ and a Jaccard overlap
+below $0.15$. Thus, the choice of aggregation semantics can change not only
+whether a contextual veto is preserved, but also which alternatives are
+ultimately prioritized.
+
+These agreement results should not be interpreted as a ranking of the
+operators themselves. They show instead that aggregation semantics define
+different mappings from the same $(R_i,Q_i)$ evidence to the final decision
+order. The compliance results identify one particularly consequential
+manifestation of this difference: under a compensatory rule, increasing
+the predictive weight can make contextually excluded alternatives
+competitive; under zero-absorbing rules, the theoretical exclusion property
+prevents this transition under the stated population conditions. Together,
+the two analyses connect the operator-level properties established
+theoretically with their population-level consequences for both policy
+compliance and the resulting Top-$K$ prioritization.
+
+\begin{figure}[H] 
     \centering
-    \includegraphics[width=\textwidth]{figures/policy_compliance_operator_agreement.pdf}
+    \includegraphics[width=0.8\textwidth]{figures/policy_compliance_operator_agreement.pdf}
     \caption{Pairwise agreement among the seven aggregation configurations
 considered in Experiment~01 ($N=1000$, $K=100$, $1000$ Monte Carlo
 replications). The configurations are $A_L$ and $A_G$ at
@@ -1502,148 +1645,102 @@ mean of the corresponding pairwise statistic across replications.
 (\textbf{a})~Kendall's $\tau_b$ between the aggregated-score rankings.
 (\textbf{b})~Jaccard similarity between the corresponding Top-$K$ sets.
 Higher values indicate greater agreement; the diagonal is omitted because
-self-comparisons are identically equal to one.}
-\label{fig:policy-operator-agreement}
-\end{figure}
-
-The experiment also reveals that the aggregation semantics affect more than
-the treatment of explicit vetoes. Figure~\ref{fig:policy-operator-agreement}
-compares the resulting prioritizations across seven representative
-configurations: $A_L$ and $A_G$ at
-$\lambda\in\{0.10,0.50,0.90\}$, together with $A_M$. Kendall's
-$\tau_b$ measures agreement between their induced score rankings, whereas
-Jaccard similarity measures the overlap between the corresponding Top-$K$
-sets. Thus, the two statistics distinguish changes in the overall ordering
-from changes in the actual alternatives selected for intervention.
-
-The pairwise results show that aggregation semantics can produce similar
-decisions when the predictive and contextual contributions are balanced, but
-the agreement can decrease substantially when a highly predictive weight is
-combined with a compensatory operator. For example, $A_L(0.50)$ and
-$A_G(0.50)$ retain a relatively high mean rank agreement
-($\tau_b>0.88$), whereas the comparison between $A_L(0.90)$ and
-$A_G(0.10)$ yields mean $\tau_b<0$ and a Jaccard overlap below $0.15$.
-The latter case illustrates a stronger form of semantic divergence: the two
-systems can assign substantially different priorities to the same
-alternatives and consequently select largely different Top-$K$ sets. This
-divergence should not be interpreted as evidence that one operator is
-generally superior. Rather, it shows that the choice of aggregation
-semantics is itself a consequential modelling decision in CADEMAS-ML.
-
-These observations are consistent with Theorem~\ref{thm:veto-preservation}
-and Corollary~\ref{cor:topk-exclusion}. The theorem establishes the
-score-level consequence of zero absorption, while the corollary identifies
-the additional population-level condition under which this property becomes
-Top-$K$ exclusion. The simulation shows the complementary case for the
-linear operator: because it is compensatory and does not satisfy zero
-absorption, the theory provides no exclusion guarantee, and the actual
-population distribution determines when vetoed alternatives become
-competitive. The dense sweep therefore quantifies a population-level
-effect that cannot be inferred from the operator definition alone.
-
-Overall, the experiment shows two distinct consequences of aggregation
-semantics. Zero-absorbing operators preserve contextual vetoes under the
-conditions of Corollary~\ref{cor:topk-exclusion}, whereas the compensatory
-linear operator can trade contextual admissibility against predictive
-evidence as $\lambda$ increases. At the same time, the Kendall and Jaccard
-results demonstrate that these semantic differences propagate to the final
-prioritization itself. The aggregation operator is therefore not merely a
-technical implementation detail: it can determine both whether excluded
-alternatives remain excluded and which alternatives ultimately constitute
-the Top-$K$ decision set.
+self-comparisons are identically equal to one.} 
+\label{fig:policy-operator-agreement} 
+\end{figure} 
+ 
 
 \subsection{Sensitivity Analysis}
-\label{subsec:sensitivity-analysis}
+\label{sec:sensitivity-analysis}
 
 The second experiment examines how uncertainty in the predictive pathway
 propagates to the prioritization produced by CADEMAS-ML, addressing
 \textit{RQ3} and \textit{RQ4}. We focus on perturbations of the predictive
 score because $R$ represents the output of an ADM or predictive model and
-can therefore be affected by estimation error. For the three aggregation
-operators considered here, the same analysis applies to contextual
-perturbations by exchanging $R$ and $Q$ and, for the linear and geometric
-operators, replacing $\lambda$ by $1-\lambda$. We therefore use noise on
-$R$ as the representative uncertainty channel rather than duplicating an
-analytically symmetric experiment on $Q$.
+can therefore be affected by estimation error. For the aggregation
+operators considered here, the corresponding analysis for contextual
+uncertainty is obtained by exchanging $R$ and $Q$ and, for the
+$\lambda$-dependent operators, replacing $\lambda$ by $1-\lambda$.
+We therefore use perturbations of $R$ as the representative uncertainty
+channel rather than duplicating an analytically symmetric experiment on
+$Q$.
 
 For each of the $1000$ Monte Carlo populations, the predictive scores are
 perturbed according to Eq.~(\ref{eq:r-noise}), with
-$\sigma_R\in\{0.05,0.10,0.20\}$.
-The contextual scores remain unchanged, including the $20\%$ of cases with
-$Q_i=0$. We evaluate the seven ranking configurations used throughout the
-experiments: $A_L$ and $A_G$ at
-$\lambda\in\{0.10,0.50,0.90\}$, together with $A_M$. These values provide
-low, intermediate, and high predictive weighting for the two
+$\sigma_R\in\{0.05,0.10,0.20\}$. The clean case $\sigma_R=0$ is retained
+as a baseline. The contextual scores remain unchanged, including the
+$20\%$ of cases with $Q_i=0$. We evaluate the seven ranking configurations
+used throughout the experiments: $A_L$ and $A_G$ at
+$\lambda\in\{0.10,0.50,0.90\}$, together with $A_M$. These settings
+provide low, intermediate, and high predictive weighting for the two
 $\lambda$-dependent operators, while $A_M$ serves as the
 $\lambda$-independent reference. For each configuration, we record the
 policy violation rate $V$ and compare the noisy ranking with the clean
 ranking obtained from the same population before perturbation, using
-Kendall's $\tau_b$ and the Top-$K$ Jaccard similarity. We also compare the
-seven configurations with one another under the same noisy realization,
-which allows us to distinguish loss of stability relative to the clean
-ranking from changes in the agreement between aggregation semantics.
+Kendall's $\tau_b$ and Top-$K$ Jaccard similarity. We also compare the
+seven configurations under the same noisy realizations to distinguish
+changes relative to their own clean rankings from changes in agreement
+between aggregation semantics.
 
-Figure~\ref{fig:sensitivity-r-noise-overview} first illustrates how the
-perturbation changes the underlying population. Panels~(a)--(c) show the
-same Monte Carlo population at increasing noise levels. Since $Q$ is fixed,
-the perturbation acts horizontally in the $(R,Q)$ plane. The vetoed cases
-therefore remain on the $Q=0$ boundary, whereas non-vetoed alternatives are
-increasingly dispersed in the predictive dimension. At the largest noise
-level, the clipping operation also becomes visible through the accumulation
-of observations at the boundaries of the admissible range. This is
-important for interpreting the subsequent ranking results: the perturbation
-is not equivalent to an unconstrained Gaussian displacement, but to noisy
-scores projected back onto $[0,1]$.
+Figure~\ref{fig:sensitivity-r-noise-overview} first illustrates the effect
+of predictive perturbations on the underlying population. Panels~(a)--(c)
+show one representative Monte Carlo population at increasing noise levels.
+Because $Q$ remains fixed, the perturbation acts horizontally in the
+$(R,Q)$ plane. Cases subject to the contextual veto therefore remain on
+the $Q=0$ boundary, whereas non-vetoed cases become increasingly dispersed
+along the predictive dimension. At the largest noise level, the clipping
+operation also produces visible accumulation at the boundaries of the
+admissible interval. Thus, the perturbation is not an unconstrained
+Gaussian displacement, but a noisy predictive score projected back onto
+$[0,1]$.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/sensitivity_r_noise_overview.pdf}
-\caption{Sensitivity to predictive-score perturbations. Panels (a)--(c)
-show one illustrative population at increasing noise levels. Panels
-(d)--(f) summarize the corresponding Monte Carlo results for the seven
-ranking configurations.}
+\caption{Sensitivity to predictive-score perturbations. Panels~(a)--(c)
+illustrate one representative population at increasing noise levels,
+while panels~(d)--(f) summarize the corresponding Monte Carlo effects
+on the seven ranking configurations.}
 \label{fig:sensitivity-r-noise-overview}
 \end{figure}
 
-The population-level consequences are shown in panels~(d)--(f). The first
-pattern concerns policy compliance. The zero-absorbing operators
-$A_G$ and $A_M$ retain $V=0$ across the tested noise levels, whereas noise
-does not provide any additional protection for the compensatory linear
+The population-level ranking consequences are summarized by policy
+compliance and ranking stability. The zero-absorbing operators $A_G$ and
+$A_M$ retain $V=0$ across the tested noise levels, whereas perturbing $R$
+does not provide additional protection for the compensatory linear
 operator. In particular, the high-predictive configuration $A_L(0.90)$
-continues to exhibit substantial violations at the larger noise levels.
-This is consistent with Theorem~\ref{thm:veto-preservation}: perturbing
-$R$ does not alter the fact that $A_G$ and $A_M$ map a true contextual veto
-$Q_i=0$ to zero. Since the population satisfies the supply condition of
-Corollary~\ref{cor:topk-exclusion}, this score-level property continues to
-exclude vetoed alternatives from the Top-$K$ set.
+continues to admit policy-violating cases. This follows directly from
+Theorem~\ref{thm:veto-preservation}: perturbing $R$ does not alter the
+property that $A_G$ and $A_M$ map a true contextual veto $Q_i=0$ to zero.
+Since the population satisfies the supply condition of
+Corollary~\ref{cor:topk-exclusion}, this score-level property continues
+to exclude vetoed alternatives from the Top-$K$ set.
 
-The second pattern is the loss of agreement with the clean ranking. At
-$\sigma_R=0.05$, the perturbation produces a moderate degradation for most
-configurations, but the effect becomes much stronger as the noise
-increases. The degradation is also operator-dependent: configurations that
-give greater weight to $R$ are generally more sensitive, particularly for
-the linear operator. At $\sigma_R=0.20$, for example, the mean Kendall
-correlation for $A_L(0.90)$ falls to approximately $-0.24$, while its
-Top-$K$ Jaccard similarity is only about $0.25$. Thus, at sufficiently
-large perturbations, the noisy prioritization can differ substantially
-from the clean one, both in the global ordering and in the actual set of
-selected alternatives. The stronger decrease in Jaccard than in Kendall's
-$\tau_b$ indicates that the instability is particularly consequential near
-the Top-$K$ boundary.
+Predictive uncertainty also reduces agreement with the corresponding
+clean rankings. At $\sigma_R=0.05$, most configurations exhibit a
+moderate degradation, which becomes substantially stronger as the noise
+increases. The effect is configuration-dependent, with settings that
+assign greater weight to $R$ generally being more sensitive, particularly
+for the linear operator. At $\sigma_R=0.20$, for example, the mean
+Kendall correlation for $A_L(0.90)$ falls to approximately $-0.24$,
+while its Top-$K$ Jaccard similarity is only about $0.25$. Thus, large
+predictive perturbations can substantially alter both the global ordering
+and the selected intervention set. The stronger degradation in Jaccard
+than in Kendall's $\tau_b$ further indicates that the instability is
+particularly consequential around the Top-$K$ boundary.
 
-The comparison between operators under the same noisy realizations is
-shown in Figure~\ref{fig:sensitivity-operator-agreement}. The heatmaps
-provide a complementary view of the previous analysis: rather than asking
-whether each configuration remains close to its own clean ranking, they
-ask whether different aggregation semantics continue to select similar
-alternatives when exposed to the same uncertain predictive scores.
-Agreement generally decreases as $\sigma_R$ increases, but the reduction
-is not uniform across configurations. In particular, configurations with
-different $\lambda$ values can diverge substantially, while configurations
-with similar integration semantics remain more closely aligned. The
-result therefore confirms that uncertainty does not erase the effect of
-aggregation semantics; instead, it interacts with the way each operator
-translates the perturbed evidence into prioritization scores.
+The agreement between aggregation configurations under shared noisy
+realizations is shown in Figure~\ref{fig:sensitivity-operator-agreement}.
+Unlike the previous analysis, which compares each noisy ranking with its
+own clean counterpart, these heatmaps compare different aggregation
+semantics under the same perturbed predictive scores. Agreement generally
+decreases as $\sigma_R$ increases, although the magnitude of the effect
+varies across configurations. In particular, settings with different
+$\lambda$ values can diverge substantially, whereas configurations with
+similar integration semantics tend to remain more closely aligned.
+Predictive uncertainty therefore does not erase the effect of aggregation
+semantics; rather, it interacts with the way each operator transforms the
+perturbed evidence into prioritization scores.
 
 \begin{figure}[H]
 \centering
@@ -1654,89 +1751,619 @@ $\tau_b$ and Top-$K$ Jaccard similarity across Monte Carlo replications.}
 \label{fig:sensitivity-operator-agreement}
 \end{figure}
 
-Taken together, the experiment shows two distinct effects of predictive
-uncertainty. It can alter the prioritization produced by all operators,
-especially when predictive evidence receives high weight, but it does not
-remove the structural distinction established by the theory. Zero
-absorption protects the veto mechanism of $A_G$ and $A_M$, whereas the
-linear operator remains compensatory and can therefore propagate
-high predictive scores into contextually excluded alternatives. The
-sensitivity analysis consequently complements the deterministic results of
-the previous experiment: uncertainty changes the stability of the
-resulting ranking, but it does not change the underlying aggregation
-semantics that determine whether contextual vetoes are structurally
-preserved.
+A complementary analysis examines how the intervention capacity $K$
+interacts with predictive uncertainty. Figure~\ref{fig:sensitivity-v-by-k}
+reports the mean policy violation rate $V$ as a function of $K$ for the
+four predictive-noise levels
+$\sigma_R\in\{0,0.05,0.10,0.20\}$. The shaded regions represent the
+corresponding $95\%$ Monte Carlo intervals. For the zero-violation
+configurations, $V$ remains at the zero baseline across both noise levels
+and values of $K$, reflecting the structural preservation of the
+contextual veto. The same near-zero behavior is observed for the
+remaining configurations except for the compensatory linear operator
+$A_L(0.90)$, which places the greatest emphasis on predictive evidence.
 
-\section{Employee Attrition Case Study} 
-\label{sec:employee-attrition-case-study}
-% R1-10
-% Presentarlo como ilustración.
-% No como validación independiente.
+For $A_L(0.90)$, the effect of intervention capacity is particularly
+informative. Under the clean baseline, policy violations are already
+present at $K=10$ and remain visible as $K$ increases. As predictive
+noise increases, however, the onset of violations is progressively
+delayed: the corresponding curve shifts toward larger $K$ values. At the
+maximum perturbation, $\sigma_R=0.20$, the violation rate remains near
+zero for the smaller intervention capacities and begins to increase only
+beyond approximately $K=50$. This behavior does not indicate improved
+policy compliance of the aggregation operator. Instead, it reflects a
+change in the composition of the cases reaching the Top-$K$ cutoff under
+noisy predictive scores.
 
-\subsection{Original CADEMAS-ML Application}
+This compositional effect is made explicit in panel~(e) of
+Figure~\ref{fig:sensitivity-v-by-k}, which decomposes the Top-$K$
+population for $A_L(0.90)$ into three mutually exclusive categories:
+\emph{clipped non-vetoed} cases, $Q$-vetoed cases, and other cases.
+Here, a \emph{clipped non-vetoed} case is a non-vetoed case
+($Q_i>0$) whose perturbed predictive score has been clipped to 1; 
+the $Q$-vetoed category comprises all cases
+with $Q_i=0$, and the \emph{other} category contains the remaining cases.
+Each tile represents the complete Top-$K$ set for a given combination of
+$K$ and $\sigma_R$, so the three proportions sum to $100\%$.
 
-% Explicar origen de scores.
+In the clean condition (i.e., $\sigma_R=0.0$, panel~(e)), clipped non-vetoed cases are virtually absent,
+whereas $Q$-vetoed cases are already represented at small values of $K$
+and become increasingly prevalent as the intervention capacity grows.
+Once predictive noise is introduced, clipped non-vetoed cases enter the
+prioritized set and progressively displace $Q$-vetoed and other cases.
+The effect is strongest at $\sigma_R=0.20$: clipped non-vetoed cases
+account for approximately $90.5\%$ of the Top-$K$ set already at $K=10$.
+Their proportion subsequently decreases as $K$ increases, although it
+does not disappear completely. From approximately $K=60$ onward,
+$Q$-vetoed cases begin to reappear and their representation increases
+with $K$, reaching about $39.7\%$ at $K=100$.
+
+The composition analysis therefore explains the apparently delayed
+increase in $V$ observed for $A_L(0.90)$ under strong predictive noise.
+Clipping concentrates perturbed predictive scores at the admissible
+boundary and changes which cases occupy the highest positions of the
+ranking. Policy-violating cases consequently do not enter the Top-$K$
+until the intervention capacity is sufficiently large for the
+$Q$-vetoed cases to re-emerge among the selected alternatives. The
+$V$-versus-$K$ analysis thus complements the noise-based ranking measures
+without introducing a new source of uncertainty: it reveals how
+intervention capacity and score perturbation jointly affect the
+composition of the selected set.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/sensitivity_v_by_k.pdf}
+\caption{Sensitivity of policy compliance to intervention capacity and
+predictive uncertainty. Panels~(a)--(d) show the mean policy violation
+rate $V$ as a function of Top-$K$ size for
+$\sigma_R\in\{0,0.05,0.10,0.20\}$, with shaded $95\%$ Monte Carlo
+intervals for the seven ranking configurations. Panel~(e) shows the
+corresponding Top-$K$ composition for $A_L(0.90)$ as a function of
+$K$ and $\sigma_R$, with each tile representing the percentage of
+\emph{clipped non-vetoed}, $Q$-vetoed, and other cases in the selected
+set.}
+\label{fig:sensitivity-v-by-k}
+\end{figure}
+
+Taken together, the sensitivity analyses reveal two complementary
+consequences of predictive uncertainty. First, noise can substantially
+reduce ranking stability, particularly for configurations that assign
+greater weight to predictive evidence. Second, its effect on policy
+compliance depends on both aggregation semantics and intervention
+capacity. Zero absorption preserves contextual vetoes independently of
+the predictive perturbation, whereas the compensatory linear operator can
+admit vetoed cases. For $A_L(0.90)$, the apparent delay in policy
+violations under strong noise is explained by the changing composition of
+the Top-$K$ set, driven in part by clipping at the boundaries of the
+predictive-score domain. Thus, uncertainty changes the stability and
+composition of the resulting prioritization, but does not alter the
+underlying aggregation semantics that determine whether contextual
+vetoes are structurally preserved.
+
+
+\subsection{Case-Study Data and CADEMAS-ML Scores}
+\label{sec:case-study-data-cademas-ml-scores}
+
+The case study revisits the employee-attrition application originally
+introduced in CADEMAS-ML \citep{Godz2026}. The cohort consists of $n=100$
+employees sampled from the \textit{IBM HR Analytics Employee Attrition and
+Performance} dataset.\footnote{Available at
+\url{https://www.kaggle.com/datasets/pavansubhasht/ibm-hr-analytics-attrition-dataset}.}
+The present study reconstructs the original CADEMAS-ML workflow to obtain
+the employee-level predictive and contextual scores used in the subsequent
+aggregation analysis. The observed attrition label is retained only as an
+external reference and is not used in the computation of either score or in
+the prioritization process.
+
+The predictive score $R_i$ is obtained from four independent machine
+learning ADM units representing different organizational perspectives:
+\textit{Culture and Wellbeing}, \textit{Finance}, \textit{Operations and
+Development}, and \textit{Human Resources}. Following the original
+application, each ADM unit is trained independently using its corresponding
+feature subset and H2O AutoML \citep{H2O.ai2026}, with an 80/20
+train--validation split and a one-hour time budget. The resulting models are
+exported as MOJO artifacts and applied to the case-study cohort to obtain
+positive-class attrition probabilities $\hat{p}_{ik}$. The four predictions
+are then combined into the cooperative predictive score
+\begin{equation}
+R_i = \sum_{k=1}^{4} w_k \hat{p}_{ik},
+\end{equation}
+where the weights are proportional to the validation AUC of the respective
+ADM unit,
+\begin{equation}
+w_k =
+\frac{\mathrm{AUC}_k}
+{\sum_{\ell=1}^{4}\mathrm{AUC}_\ell}.
+\end{equation}
+Thus, $R_i\in[0,1]$ represents the integrated predictive assessment of
+employee attrition risk while preserving the contributions of the four
+partially independent ADM units.
+
+The contextual score $Q_i$ is computed independently from the predictive
+layer through the \textit{Digital/Technological Transformation} context
+defined in the original application. This context comprises seven fuzzy
+atomic rules concerning employee characteristics relevant to technological
+transformation. These rules are combined into four higher-level criteria:
+\textit{upskilling capacity}, \textit{career scalability},
+\textit{investment horizon}, and \textit{role adaptability}. The resulting
+criteria are aggregated according to the context policy and combined
+conjunctively using the Gödel minimum. Consequently, failure to satisfy any
+of the four higher-level requirements yields $Q_i=0$. The resulting
+$Q_i\in[0,1]$ therefore represents the degree of contextual alignment of
+employee $i$ with the transformation scenario, independently of the
+predictive attrition assessment.
+
+The resulting cohort contains 35 employees with $Q_i=0$, corresponding to
+contextual vetoes, while the remaining employees have strictly positive
+contextual scores. The predictive scores span almost the entire admissible
+range, approximately $R_i\in[0,0.99]$, whereas the non-vetoed contextual
+scores occupy a narrower range, approximately $Q_i\in[0.06,0.73]$. This
+combination provides a heterogeneous decision population in which
+predictive risk and contextual alignment are only partially aligned. In
+particular, high predictive risk does not necessarily imply high contextual
+alignment, while contextual vetoes may occur at different levels of
+predictive risk. This makes the cohort suitable for examining whether the
+aggregation rule can alter prioritization when the underlying predictive
+and contextual assessments are held fixed.
 
 \subsection{Experimental Setup}
+\label{sec:experimental-setup}
 
-% R1-10
-% Top-K.
-% Empates.
-% Context scores.
-% Procedimiento.
+The analysis considers a fixed intervention capacity of $K=10$, corresponding to $10\%$ of the $n=100$ employee cohort. For each employee, the same predictive and contextual scores $(R_i,Q_i)$ described above are combined using the seven integration configurations considered throughout the experiments: $A_L(0.1), A_L(0.5), A_L(0.9), A_G(0.1), A_G(0.5), A_G(0.9), A_M$.
+Here, $A_M=\min(R,Q)$ is the zero-absorbing minimum operator, whereas
+$A_L$ and $A_G$ represent the linear and weighted geometric operators,
+respectively. Thus, the predictive and contextual assessments, as well as
+all employee attributes, remain unchanged across configurations; only the
+integration semantics used to obtain $P_i$ vary.
+
+For each configuration, employees are ordered by decreasing prioritization
+score $P_i$, and the first $K$ positions define the intervention set. Exact
+ties are resolved deterministically by first comparing the predictive score
+$R_i$ and then using the original cohort order as a final tie-break. This
+convention ensures that every configuration produces a unique Top-$K$ set
+and avoids introducing an additional policy-specific rule for tied
+prioritization scores.
+
+The analysis compares both the resulting score distributions and the
+composition of the Top-$10$ sets. In particular, $A_L(0.5)$ is used as a
+reference configuration for the rank-trajectory analysis, allowing the
+effect of changing the aggregation semantics to be expressed as rank
+displacements for employees initially selected under the reference policy.
+Set-level differences are additionally quantified through the intersection
+and Jaccard similarity between the corresponding Top-$10$ sets.
+
+For brevity, implementation-level details of the case-study construction are
+not reproduced here. The complete workflow, including the four predictive
+ADM units, fuzzy-rule-based contextual evaluation, computation of $R_i$ and
+$Q_i$, all seven aggregation configurations, deterministic ranking
+procedure, and generation of the reported results, is implemented in the
+repository accompanying this paper. The implementation therefore provides
+a reproducible specification of the complete case-study pipeline while
+allowing the present section to focus on the consequences of the
+aggregation choices.
 
 \subsection{Results and Interpretation}
+\label{sec:results-and-interpretation}
 
-% R1-10
-% Mostrar estabilidad para distintos K.
+Figure~\ref{fig:attrition-case-overview} provides an overview of the
+resulting decision population and prioritization scores. Panel~(a) shows
+that predictive risk and contextual alignment are only partially aligned
+in the cohort. In particular, the population contains a substantial group
+of contextually vetoed employees with $Q_i=0$, while several employees with
+relatively high predictive risk exhibit only moderate contextual alignment.
+This separation between the two dimensions is important because it creates
+a setting in which the integration rule can materially affect the resulting
+priority rather than merely rescaling a common ordering.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/attrition_case_overview.pdf}
+    \caption{Employee-attrition case study ($n=100$, $K=10$).
+    (\textbf{a})~Cohort in the $(R,Q)$ plane, with contextually vetoed cases ($Q_i=0$) along the horizontal axis.
+    (\textbf{b})~Aggregated-score distributions for the seven integration configurations. The dashed line on each violin is the Top-$K$ cutoff ($K=10$); overlaid points use the same stratum colours as panel~(a).}
+    \label{fig:attrition-case-overview}
+\end{figure}
+
+Panel~(b) shows the distributions of $P_i$ produced by the seven
+configurations. The Top-$10$ cutoff varies considerably across operators,
+from approximately $0.33$ for $A_M$ to approximately $0.89$ for
+$A_L(0.9)$. This variation reflects not only differences in score scale but
+also changes in the relative position of employees within the ranking. In
+particular, increasing $\lambda$ in the linear operator progressively
+emphasizes predictive risk and shifts the prioritization toward employees
+with high $R_i$. This effect is especially consequential for
+$A_L(0.9)$: one employee with $Q_i=0$ enters the Top-$10$, despite being
+contextually vetoed. In contrast, the zero-absorbing operators $A_G$ and
+$A_M$ assign $P_i=0$ whenever $Q_i=0$ and therefore exclude all vetoed
+employees from the Top-$10$ in this cohort. The figure consequently
+illustrates at the application level the structural distinction established
+in the theoretical and simulation analyses.
+
+The distributional differences translate directly into changes in the
+composition of the intervention set. To make these changes explicit,
+Figure~\ref{fig:attrition-rank-bump-delta} tracks the ten employees selected
+under $A_L(0.5)$ as the reference configuration. Under this policy, the
+selected employees are characterized by high predictive scores and
+non-zero, generally moderate-to-high contextual scores. Changing only the
+aggregation rule can nevertheless move several of these employees out of
+the intervention capacity. The Top-$10$ intersection with the reference
+set is only 5 employees for $A_L(0.1)$ and 6 for $A_L(0.9)$, corresponding
+to Jaccard similarities of $0.33$ and $0.43$, respectively. Thus, both
+stronger context weighting and stronger predictive weighting can produce
+substantial replacement of intervention slots relative to the intermediate
+linear policy.
+
+The effect is particularly pronounced for the high-predictive linear
+configuration. Several employees who occupy the middle or lower part of
+the reference Top-$10$ are strongly demoted under $A_L(0.9)$, while
+employees with very high $R_i$ and comparatively weaker contextual
+alignment move upward. For example, Andrew Ross moves from rank~4 to
+rank~17 and Caroline Bennett from rank~5 to rank~14, whereas Noah Murphy
+moves from rank~7 to rank~2 and Christian Bennett from rank~9 to rank~3.
+The most pronounced displacement is observed for Madison Foster, whose
+rank changes from 10 to 37. These movements illustrate that the effect is
+not simply a change in the absolute scale of $P_i$: the aggregation
+semantics alter the relative ordering of employees and consequently which
+employees receive intervention.
+
+The zero-absorbing configurations are comparatively stable around the
+intermediate weighting. The Top-$10$ Jaccard similarity reaches $0.82$ for
+both $A_G(0.5)$ and $A_M$, with most employees from the $A_L(0.5)$ reference
+set retaining positions within or close to the intervention boundary.
+Nevertheless, even these operators can replace individual employees when
+their aggregation semantics differ sufficiently from the reference
+linear policy. Hence, zero absorption should not be interpreted as implying
+identical rankings; its structural guarantee concerns the treatment of
+contextual vetoes, not complete rank invariance.
+
+Taken together, the case study demonstrates that aggregation semantics can
+have a direct operational consequence in a realistic CADEMAS-ML workflow.
+The predictive and contextual assessments remain fixed throughout the
+comparison, yet changing only the integration operator alters the
+distribution of prioritization scores, the relative ranking of employees,
+and, ultimately, the composition of a resource-constrained intervention
+set. The case study therefore provides a concrete application-level
+illustration of the central result of the preceding analyses: the choice
+of aggregation policy is not a cosmetic modeling decision, because it can
+determine which individuals receive scarce intervention resources.
+
+
+Figure~\ref{fig:attrition-rank-bump-delta} complements the distributional view by
+tracking the same Top-$K$ intervention set under changes of aggregation
+semantics. The trajectories are those of the ten employees selected under
+$A_L(0.5)$; at the reference column the markers report absolute ranks,
+whereas the remaining columns report the signed rank displacement relative
+to that baseline (solid markers indicate an unchanged position). The shaded
+band marks the Top-$10$ region, so departures below that band correspond to
+employees that leave the intervention set under the corresponding operator.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/attrition_rank_bump_delta.pdf}
+    \caption{Rank trajectories of the Top-$10$ employees under $A_L(0.5)$
+    across the seven aggregation configurations ($n=100$, $K=10$).
+    Absolute ranks are shown at the reference column $A_L(0.5)$; elsewhere,
+    markers report the signed change relative to that baseline
+    ($\Delta=\mathrm{rank}-\mathrm{rank}_{A_L(0.5)}$), with solid
+    series-coloured markers when the rank is unchanged. The shaded band
+    highlights the Top-$10$ region.}
+    \label{fig:attrition-rank-bump-delta}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Discussion}
+\label{sec:discussion}
 
-% R1-1, R1-8, R2-2
+The results support a central interpretation of this study: in a cooperative
+automated decision-making architecture, the aggregation mechanism is not a
+neutral post-processing choice. When predictive evidence and contextual
+requirements are represented by separate decision pathways, the operator
+that integrates them determines how these two forms of evidence can interact
+and, consequently, which alternatives become eligible for prioritization.
+This effect is visible at three complementary levels in the present study:
+the formal properties of the aggregation functions, the population-level
+behavior observed in the Monte Carlo experiments, and the composition of the
+intervention set in the employee-attrition case study.
+
+The results should nevertheless not be interpreted as establishing a
+universal ordering of aggregation operators. The geometric and minimum
+operators are not shown to be generally superior to linear aggregation.
+Rather, the experiments demonstrate that different aggregation semantics
+encode different policy assumptions. In particular, zero absorption makes a
+contextual veto structurally non-compensable, whereas the linear operator
+allows predictive evidence to compensate for a null contextual assessment.
+The practical consequences of selecting one semantics over another depend
+therefore on the intended role of contextual information in the decision
+process.
 
 \subsection{Implications for Cooperative Automated Decision Making}
+\label{subsec:discussion-cademas}
 
-% Discusión conceptual.
+The main implication for cooperative automated decision making is that
+aggregation should be treated as an explicit architectural and policy
+component rather than as an implementation detail. In CADEMAS-ML, the
+predictive and contextual pathways can produce the same pair of scores
+$(R_i,Q_i)$, yet different aggregation rules can transform that identical
+evidence into substantially different prioritization orders. The simulations
+show that this difference is particularly consequential when contextual
+requirements represent exclusionary policies. Under zero-absorbing
+operators, $Q_i=0$ is propagated to $P_i=0$, so predictive evidence cannot
+restore an alternative to the prioritization set. Under the compensatory
+linear operator, in contrast, a sufficiently large predictive score can
+produce a positive aggregate score even when $Q_i=0$. Thus, the distinction
+between a contextual requirement acting as a hard constraint or as a
+compensable preference is encoded directly in the aggregation semantics.
+
+This observation is relevant to cooperative architectures because the
+different subsystems need not have the same epistemic or organizational
+status. A predictive ADM may estimate an outcome such as employee attrition,
+while a contextual subsystem may encode organizational requirements,
+eligibility conditions, or policy constraints. Treating both outputs simply
+as commensurable numerical evidence and averaging them implicitly assumes
+that sufficiently strong evidence from one pathway may compensate for a
+deficit in the other. Such an assumption may be appropriate for some
+decisions, but it is not policy-neutral. The choice of aggregation operator
+therefore determines a form of interaction between the participating
+decision components.
+
+The experimental results also show that policy compliance and ranking
+stability are related but distinct properties. Zero absorption guarantees
+the preservation of contextual vetoes, but it does not imply that all
+non-vetoed alternatives receive similar ranks under different operators.
+Likewise, agreement between two operators does not imply that they implement
+the same policy semantics. Configurations can produce similar Top-$K$ sets
+in some regions of the parameter space while differing fundamentally in
+their behavior at a contextual boundary. This distinction is important when
+evaluating cooperative decision systems: similarity of observed decisions
+in a particular population should not be confused with equivalence of the
+underlying integration policies.
+
+The sensitivity analysis reinforces this interpretation. Predictive-score
+uncertainty can substantially modify rankings, especially when predictive
+evidence receives a high weight, but it does not remove the structural
+distinction between compensatory and zero-absorbing aggregation. In
+particular, perturbations of $R$ do not cause zero-absorbing operators to
+admit alternatives with $Q_i=0$. The observed degradation in ranking
+stability should therefore be understood as uncertainty acting through an
+already specified aggregation semantics, rather than as uncertainty
+eliminating the policy distinction between operators.
+
+The employee-attrition case study provides the corresponding application
+level interpretation. The four predictive ADM outputs and the contextual
+assessment are held fixed while only the aggregation rule is changed. The
+resulting changes in the Top-$10$ composition demonstrate that the
+aggregation policy can determine which individuals receive scarce
+intervention resources. This is particularly relevant in resource
+constrained settings, where small changes in the ordering around the
+Top-$K$ boundary can translate into actual differences in intervention
+allocation. The case study therefore illustrates the operational
+significance of the formal properties established earlier without being
+treated as an independent validation of the theoretical results.
+
+More generally, these findings suggest that aggregation policies in
+cooperative ADM systems should be selected according to the intended
+relationship between evidence sources and documented policy requirements.
+Where contextual information represents a strict eligibility condition,
+zero-absorbing or otherwise non-compensatory aggregation may be appropriate.
+Where predictive and contextual evidence are legitimately substitutable, a
+compensatory operator may instead be justified. The important point is that
+this choice should be explicit and auditable rather than being inherited
+implicitly from a convenient averaging rule.
 
 \subsection{Relation to Fuzzy MCDM and Aggregation Theory}
+\label{subsec:discussion-fuzzy-mcdm}
 
-% R1-1, R2-2
-% Subsection MUY IMPORTANTE.
-%
-% Explicar explícitamente:
-% - qué NO aporta el paper;
-% - qué sí aporta.
-%
-% Distinguir:
-% aggregation theory,
-% fuzzy MCDM,
-% CADEMAS.
+The contribution of this work should be distinguished carefully from a
+contribution to aggregation theory or to fuzzy multi-criteria decision
+making in isolation. The operators studied here---including weighted
+arithmetic, weighted geometric, and minimum aggregation---are classical
+aggregation functions, and their basic mathematical properties are not
+new. Likewise, fuzzy MCDM has an extensive literature on aggregation,
+compensation, conjunctive decision rules, and the representation of
+criteria with different degrees of importance. The present work does not
+propose a new aggregation function, nor does it claim a new general theory
+of fuzzy aggregation.
+
+The contribution instead lies in examining these familiar operators as
+alternative \emph{integration semantics} within a cooperative automated
+decision-making architecture. The two aggregated quantities in this study
+are not simply homogeneous decision criteria of a conventional MCDM
+problem. $R_i$ represents predictive evidence produced by an automated
+decision-making pathway, whereas $Q_i$ represents contextual alignment
+derived from a separate knowledge- and policy-oriented pathway. Their
+integration therefore determines how evidence originating from different
+decision mechanisms interacts at the point where the final prioritization
+is produced.
+
+This distinction matters because the same aggregation function can have a
+different governance interpretation depending on what its inputs represent.
+A weighted arithmetic mean used to combine two conventional performance
+criteria expresses a particular preference model. Applied to predictive
+risk and a contextual veto, the same mathematical function additionally
+determines whether policy restrictions can be compensated by predictive
+evidence. In the present setting, the algebraic property of zero absorption
+therefore acquires a direct decision-governance interpretation: it specifies
+whether a null contextual assessment is capable of being overridden at the
+integration stage.
+
+From this perspective, the theoretical analysis contributes a way of
+connecting aggregation properties to CADEMAS-level decision behavior.
+Zero absorption yields contextual veto preservation, while compensability
+characterizes the extent to which one pathway can offset the other within
+the admissible score range. The simulation results then establish that
+these properties are not merely algebraic distinctions: they produce
+measurable differences in policy violation, ranking agreement, and Top-$K$
+composition. The case study further shows that the same mechanism remains
+visible when $R_i$ and $Q_i$ originate from an actual CADEMAS-ML workflow.
+
+The relationship with fuzzy MCDM is consequently complementary rather than
+competitive. Fuzzy MCDM provides a mature body of aggregation models and
+decision rules for representing graded information and preference
+structures. The present study takes a subset of such aggregation semantics
+and asks a different question: what are the consequences when these
+semantics are used to integrate an automated predictive assessment with a
+contextual policy assessment inside a cooperative ADM architecture? This
+perspective also explains why the paper does not attempt to identify a
+universally optimal operator. The appropriate aggregation semantics depend
+on whether contextual information is intended to act as a preference,
+a soft constraint, or a strict veto.
+
+The distinction is also important for interpreting the broader literature
+on advanced aggregation mechanisms such as OWA, Choquet integrals, and
+consensus-based aggregation. Such mechanisms provide richer ways of
+representing interactions, importance weights, or non-additive preferences,
+but adopting a more expressive operator does not by itself resolve the
+policy question addressed here. A more complex operator must still make
+explicit whether and under which conditions contextual requirements can be
+compensated by predictive evidence. The present framework therefore
+provides a semantic criterion against which alternative aggregation
+mechanisms can subsequently be analyzed within CADEMAS.
 
 \subsection{Limitations}
+\label{subsec:discussion-limitations}
 
-% R1-8, R1-10
-% Limitar alcance de conclusiones.
+Several limitations delimit the scope of the conclusions. First, the
+theoretical analysis focuses on three representative aggregation regimes:
+linear, weighted geometric, and minimum aggregation. These operators span
+different degrees of compensability and provide a useful basis for
+isolating the role of zero absorption, but they do not exhaust the space of
+possible aggregation mechanisms. The conclusions should therefore not be
+generalized to all nonlinear, fuzzy, or non-additive operators.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Second, the Monte Carlo experiments use controlled population designs.
+The contextual vetoes and the distributions of $(R_i,Q_i)$ are deliberately
+constructed to expose conflicts between predictive evidence and contextual
+requirements. This design is appropriate for testing the theoretical
+properties of the operators, but it does not reproduce the full complexity
+of deployed decision environments. In particular, the empirical threshold
+at which violations emerge for the linear operator is a property of the
+considered population and Top-$K$ setting, not a universal critical value
+of $\lambda$.
+
+Third, the uncertainty analysis considers perturbations of the predictive
+score $R$. For the operators studied here, the corresponding contextual
+perturbation can be obtained by exchanging the inputs and using the
+complementary weighting parameter for the $\lambda$-dependent operators.
+This symmetry avoids a redundant Monte Carlo experiment, but it does not
+capture all forms of uncertainty that may arise in a real contextual
+reasoning subsystem, such as rule uncertainty, changes in membership
+functions, or model-structure uncertainty.
+
+Fourth, the employee-attrition analysis is an illustrative case study based
+on a cohort of $100$ employees and a single contextual scenario. Although
+the predictive and contextual pathways are reconstructed from the original
+CADEMAS-ML application and the complete workflow is reproducible, the case
+study does not establish external validity across organizations, datasets,
+or intervention policies. The observed changes in the Top-$10$ set should
+therefore be interpreted as evidence that aggregation semantics can matter
+in a realistic workflow, rather than as evidence that one operator is
+generally preferable for employee-attrition interventions.
+
+Finally, the present study evaluates the aggregation stage while treating
+the predictive and contextual scores as given inputs to that stage. It does
+not address how organizations should determine the substantive validity of
+the predictive models, the appropriateness of the contextual rules, or the
+fairness and acceptability of the resulting interventions. These are
+important dimensions of automated decision making, but they concern
+different layers of the CADEMAS architecture. Separating them from the
+aggregation analysis is necessary to identify the specific contribution of
+this work, while also limiting the conclusions that can be drawn from the
+reported experiments.
 
 \section{Conclusions and Future Work}
+\label{sec:conclusions-future-work}
 
-% R1-8
-% Moderar afirmaciones.
-%
-% No decir:
-% "nonlinear operators are superior".
-%
-% Decir:
-% "under the considered conditions".
+This study investigated how aggregation semantics affect prioritization in
+Cooperative Automated Decision-Making Systems when predictive evidence and
+contextual requirements are integrated into a single decision score. The
+analysis considered three representative aggregation regimes---linear,
+weighted geometric, and minimum aggregation---and examined their structural
+properties, policy-compliance behavior, sensitivity to predictive
+uncertainty, and consequences for resource-constrained Top-$K$
+prioritization.
 
-% Futuro:
-% OWA,
-% Choquet,
-% learned aggregation,
-% dynamic policies.
+The results provide a direct answer to the research questions. Regarding
+\textbf{RQ1}, the analysis shows that zero absorption is the key structural
+property determining whether a contextual veto is preserved by the
+integration stage. The weighted geometric and minimum operators satisfy this
+property, whereas the linear operator with $\lambda\in(0,1)$ is
+compensatory and can assign a positive prioritization score to an
+alternative with $Q_i=0$. Thus, contextual veto preservation is not an
+automatic consequence of combining predictive and contextual scores; it
+depends on the aggregation semantics.
+
+For \textbf{RQ2}, the controlled experiments show that this structural
+difference has direct consequences for policy compliance. Under the
+considered population designs and Top-$K$ selection conditions, the
+zero-absorbing operators preserve the contextual veto mechanism, whereas
+the linear operator can introduce vetoed alternatives into the prioritized
+set. The magnitude of this effect depends on the predictive weighting and
+on the distribution of predictive and contextual evidence. These results
+should therefore be interpreted as a characterization of the considered
+conditions rather than as evidence that one aggregation family is generally
+superior to another.
+
+For \textbf{RQ3}, the sensitivity analysis demonstrates that predictive
+uncertainty can substantially modify prioritization, particularly when
+predictive evidence receives greater weight. Increasing perturbations of
+$R$ reduce agreement with the corresponding clean rankings and can alter the
+composition of the Top-$K$ set. The effect is therefore not limited to
+small numerical changes in aggregate scores: uncertainty can propagate to
+the actual alternatives selected for intervention. At the same time, the
+structural policy distinction between compensatory and zero-absorbing
+operators remains intact under the considered perturbations.
+
+For \textbf{RQ4}, the results indicate that uncertainty and aggregation
+semantics interact rather than becoming indistinguishable under noise.
+Increasing predictive perturbations can reduce agreement among different
+configurations, but the resulting rankings continue to reflect the
+underlying integration rules. The additional analysis over different
+intervention capacities shows that the observed policy-violation behavior
+also depends on the Top-$K$ boundary. In particular, under strong predictive
+noise, clipping of perturbed predictive scores can substantially alter the
+composition of the selected set and thereby modify the observed violation
+rate. This highlights that policy compliance should be evaluated jointly
+with the uncertainty model and the operational intervention capacity,
+rather than solely from the aggregate function in isolation.
+
+The employee-attrition case study provides an application-level
+illustration of these findings. Using the same predictive and contextual
+assessments for all configurations, changing only the aggregation semantics
+produces different prioritization distributions and can replace several
+employees within a fixed Top-$10$ intervention budget. The case study
+therefore demonstrates the practical relevance of the theoretical
+distinction: aggregation is capable of changing not only the numerical
+priority assigned to an employee but also whether that employee receives a
+scarce intervention opportunity.
+
+Taken together, the findings support a more explicit treatment of
+aggregation as a policy-bearing component of cooperative automated
+decision-making architectures. The contribution is not a new aggregation
+function, nor a claim that nonlinear or non-compensatory operators are
+universally preferable. Rather, the study provides a formal and empirical
+characterization of how established aggregation semantics translate the
+relationship between predictive evidence and contextual requirements into
+prioritization behavior within CADEMAS-ML. This perspective makes the
+choice of integration rule an explicit design and governance decision that
+can be analyzed in terms of properties such as zero absorption,
+compensability, policy compliance, and ranking stability.
+
+Several directions follow naturally from this work. First, future studies
+can extend the analysis to richer aggregation families, including ordered
+weighted averaging (OWA), Choquet integrals, and other non-additive
+operators, to determine how interaction and importance structures affect
+contextual veto preservation and compensation. Second, aggregation
+parameters could themselves be learned from historical decisions or
+stakeholder preferences, leading to learned aggregation mechanisms whose
+policy properties can be analyzed before deployment. Third, future CADEMAS
+implementations could consider dynamic aggregation policies in which the
+integration rule or its parameters adapt to changes in context, uncertainty,
+resource availability, or decision objectives. Finally, extending the
+evaluation to larger and heterogeneous real-world cohorts would allow the
+interaction between aggregation semantics, uncertainty, and intervention
+constraints to be studied beyond the controlled and illustrative settings
+considered here.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \authorcontributions{To be completed.}
@@ -1896,6 +2523,12 @@ P{\'e}rez-Ca{\~n}edo, B.; Novoa-Hern{\'a}ndez, P.; Porras, C.; Pelta, D.; Verdeg
 \newblock Contextual analysis of solutions in a tourist trip design problem: A fuzzy logic-based approach.
 \newblock {\em Applied Soft Computing} {\bf 2024}, {\em 154},~111351.
 \newblock {\url{https://doi.org/10.1016/j.asoc.2024.111351}}.
+
+\bibitem[H2O.ai(2026)]{H2O.ai2026}
+{H2O.ai}.
+\newblock {H2O.ai}: The Open Source {AI} Platform.
+\newblock 2026.
+\newblock Available online: {\url{https://www.h2o.ai/}} (accessed on 12 January 2026).
 
 \end{thebibliography}
 \end{adjustwidth}

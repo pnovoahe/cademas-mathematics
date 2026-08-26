@@ -124,6 +124,21 @@ def apply_contextual_noise(
     return np.clip(Q_out + eps, 0.0, 1.0)
 
 
+def _score_uncertainty_perturbation(
+    R: FloatArray,
+    rng: np.random.Generator,
+    sigma_r: float,
+) -> tuple[FloatArray, BoolArray]:
+    """Return ``(R', is_clipped)`` from one draw of ``ε ~ N(0, σ_R²)``."""
+    R_in = np.asarray(R, dtype=float)
+    if float(sigma_r) <= 0.0:
+        return R_in.copy(), np.zeros(R_in.shape, dtype=bool)
+    eps = rng.normal(0.0, float(sigma_r), size=R_in.shape)
+    raw = R_in + eps
+    is_clipped = (raw < 0.0) | (raw > 1.0)
+    return np.clip(raw, 0.0, 1.0), is_clipped
+
+
 def apply_score_uncertainty(
     R: FloatArray,
     rng: np.random.Generator,
@@ -134,11 +149,31 @@ def apply_score_uncertainty(
     Applied to all cases. When ``sigma_r`` is zero, returns a copy of ``R``
     unchanged.
     """
-    R_out = np.asarray(R, dtype=float).copy()
-    if float(sigma_r) <= 0.0:
-        return R_out
-    eps = rng.normal(0.0, float(sigma_r), size=R_out.shape)
-    return np.clip(R_out + eps, 0.0, 1.0)
+    r_noisy, _ = _score_uncertainty_perturbation(R, rng, sigma_r)
+    return r_noisy
+
+
+def score_uncertainty_clip_mask(
+    R: FloatArray,
+    rng: np.random.Generator,
+    sigma_r: float,
+) -> BoolArray:
+    """Return a mask of cases where ``clip(R + ε, 0, 1)`` alters ``R + ε``.
+
+    Uses an independent noise draw. For paired ``(R', mask)`` use
+    ``apply_score_uncertainty_with_clip_mask`` instead.
+    """
+    _, is_clipped = _score_uncertainty_perturbation(R, rng, sigma_r)
+    return is_clipped
+
+
+def apply_score_uncertainty_with_clip_mask(
+    R: FloatArray,
+    rng: np.random.Generator,
+    sigma_r: float,
+) -> tuple[FloatArray, BoolArray]:
+    """Return ``(R', is_clipped)`` from a single noise draw."""
+    return _score_uncertainty_perturbation(R, rng, sigma_r)
 
 
 def apply_predictive_overconfidence(

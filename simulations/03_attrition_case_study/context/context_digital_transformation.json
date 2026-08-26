@@ -1,0 +1,114 @@
+{
+  "context_name": "Digital / Technological Transformation",
+  "description": "Prioritize retention interventions during digital transformation: keep employees with high upskilling capacity, role adaptability, scalable careers, and adequate investment horizon.",
+  "rules": [
+    {
+      "name": "training_high",
+      "full_name": "High training",
+      "feature": "training_times_last_year",
+      "type": "linear_increasing",
+      "params": [1, 6],
+      "note": "Frequent training indicates upskilling potential."
+    },
+    {
+      "name": "education_high",
+      "full_name": "High education",
+      "feature": "education",
+      "type": "linear_increasing",
+      "params": [2, 5],
+      "note": "Higher education level supports upskilling."
+    },
+    {
+      "name": "years_company_relevant",
+      "full_name": "Relevant years at company",
+      "feature": "years_at_company",
+      "type": "triangular",
+      "params": [3, 10, 20],
+      "note": "Relevant organizational tenure (not too new, not too late-stage)."
+    },
+    {
+      "name": "years_role_relevant",
+      "full_name": "Relevant years in role",
+      "feature": "years_in_current_role",
+      "type": "triangular",
+      "params": [1, 6, 11],
+      "note": "Role tenure: avoid immediate newcomers and strong stagnation."
+    },
+    {
+      "name": "age_investment_window",
+      "full_name": "Age investment window",
+      "feature": "age",
+      "type": "trapezoidal",
+      "params": [22, 28, 50, 57],
+      "note": "Adequate horizon for transformation payoff."
+    },
+    {
+      "name": "experience_sufficient",
+      "full_name": "Sufficient experience",
+      "feature": "total_working_years",
+      "type": "linear_increasing",
+      "params": [2, 10],
+      "note": "Minimum experience supports adoption and transfer of knowledge."
+    },
+    {
+      "name": "role_adaptability",
+      "full_name": "Role adaptability",
+      "feature": "job_role",
+      "type": "categorical_map",
+      "params": {
+        "Research Scientist": 0.9,
+        "Research Director": 0.9,
+        "Manager": 0.8,
+        "Manufacturing Director": 0.7,
+        "Healthcare Representative": 0.7,
+        "Sales Executive": 0.6,
+        "Laboratory Technician": 0.4,
+        "Sales Representative": 0.4,
+        "Human Resources": 0.5
+      },
+      "note": "Role adaptability as a prior map (tunable)."
+    }
+  ],
+  "derived_rules": [
+    {
+      "name": "upskilling_capacity",
+      "full_name": "Upskilling capacity",
+      "op": "AVERAGE",
+      "inputs": [
+        { "rule": "training_high" },
+        { "rule": "education_high" }
+      ],
+      "note": "Upskilling is the mean of training frequency and education level."
+    },
+    {
+      "name": "career_scalability",
+      "full_name": "Career scalability",
+      "op": "PRODUCT",
+      "inputs": [
+        { "rule": "years_company_relevant" },
+        { "rule": "years_role_relevant" }
+      ],
+      "note": "Career scalability requires both relevant tenure and role mobility."
+    },
+    {
+      "name": "investment_horizon",
+      "full_name": "Investment horizon",
+      "op": "PRODUCT",
+      "inputs": [
+        { "rule": "age_investment_window" },
+        { "rule": "experience_sufficient" }
+      ],
+      "note": "Horizon: enough time + enough experience."
+    }
+  ],
+  "logic": {
+    "op": "AND",
+    "inputs": [
+      { "rule": "upskilling_capacity" },
+      { "rule": "role_adaptability" },
+      { "rule": "career_scalability" },
+      { "rule": "investment_horizon" }
+    ],
+    "note": "Conjunctive policy: a complete miss on any high-level criterion yields Q=0 (contextual veto)."
+  }
+}
