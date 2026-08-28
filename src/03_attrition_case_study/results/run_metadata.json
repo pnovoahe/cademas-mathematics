@@ -1,0 +1,24 @@
+{
+  "created_at_utc": "2026-08-24T10:26:06+00:00",
+  "input_data": "/Users/pavelnovoahernandez/Cursor/cademas-mathematics/src/03_attrition_case_study/data/cases_attrition_100.csv",
+  "input_context": "/Users/pavelnovoahernandez/Cursor/cademas-mathematics/src/03_attrition_case_study/context/context_digital_transformation.json",
+  "input_model_definitions": "/Users/pavelnovoahernandez/Cursor/cademas-mathematics/src/03_attrition_case_study/models/model_definitions.json",
+  "models_dir": "/Users/pavelnovoahernandez/Cursor/cademas-mathematics/src/03_attrition_case_study/models",
+  "auc_weights": {
+    "cw_StackedEnsemble_BestOfFamily_4_AutoML_1_20260118_132607.zip": 0.2622792818459985,
+    "fin_StackedEnsemble_BestOfFamily_4_AutoML_2_20260118_150802.zip": 0.2630880538114653,
+    "od_GBM_grid_1_AutoML_3_20260118_163705_model_26.zip": 0.21163456832390976,
+    "hr_StackedEnsemble_BestOfFamily_4_AutoML_2_20260119_90304.zip": 0.2629980960186264
+  },
+  "n_cases": 100,
+  "operators": [
+    "linear@0.10",
+    "linear@0.50",
+    "linear@0.90",
+    "geometric@0.10",
+    "geometric@0.50",
+    "geometric@0.90",
+    "min"
+  ],
+  "output_csv": "/Users/pavelnovoahernandez/Cursor/cademas-mathematics/src/03_attrition_case_study/results/cases_attrition_100_operator_scores.csv"
+}

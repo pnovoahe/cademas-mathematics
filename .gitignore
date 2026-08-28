@@ -243,16 +243,25 @@ __marimo__/
 *.figlist
 *.makefile
 *-converted-to.*
-!paper_final/Definitions/*-converted-to.*
 missfont.log
 
 # Matplotlib cache
 .mplconfig/
-experiments/.mplconfig/
-simulations/.mplconfig/
+src/.mplconfig/
 
-# Monte Carlo aggregated summaries (regenerate with --refresh)
-experiments/.cache/
+# Manuscript LaTeX projects (local only)
+first_round/
+first_round_v1/
+first_round_v2/
+first_round_v3/
+paper_final/
+
+# Legacy / non-companion content
+experiments/
+reviewers/
+
+# Stray LaTeX log at repo root
+texput.log
 
 # Superseded paper drafts and review artifacts (kept locally in old/)
 old/
