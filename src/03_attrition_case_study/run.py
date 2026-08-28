@@ -45,6 +45,7 @@ os.environ.setdefault("MPLCONFIGDIR", str(SIM_DIR / ".mplconfig"))
 from common.aggregators import aggregate  # noqa: E402
 from common.config import agreement_operator_specs  # noqa: E402
 from common.plotting import attrition_case_overview, attrition_rank_bump  # noqa: E402
+from common.utils import path_for_metadata  # noqa: E402
 from fuzzy_context import calculate_context_score  # noqa: E402
 
 DATA_CSV = EXP_DIR / "data" / "cases_attrition_100.csv"
@@ -81,16 +82,16 @@ def _load_json(path: Path) -> dict:
 
 
 def _check_runtime() -> None:
-    missing = [p for p in (DATA_CSV, CONTEXT_JSON, MODEL_DEFS_JSON) if not p.exists()]
+    missing = [path_for_metadata(p, base=EXP_DIR) for p in (DATA_CSV, CONTEXT_JSON, MODEL_DEFS_JSON) if not p.exists()]
     if missing:
         raise FileNotFoundError(f"Missing required files: {missing}")
     for model_file in MODEL_SHORT:
         if not (MODELS_DIR / model_file).exists():
-            raise FileNotFoundError(f"Missing MOJO file: {MODELS_DIR / model_file}")
+            raise FileNotFoundError(f"Missing MOJO file: models/{model_file}")
     if not CADEMAS_APP_APP_DIR.exists():
         raise FileNotFoundError(
-            f"Expected sibling app path not found: {CADEMAS_APP_APP_DIR}. "
-            "Place cademas-app next to cademas-mathematics."
+            "Expected sibling repository 'cademas-app' with app/fuzzy_context.py "
+            "(place it next to this companion repository)."
         )
 
 
@@ -225,14 +226,14 @@ def main() -> None:
 
     metadata = {
         "created_at_utc": _utc_now_iso(),
-        "input_data": str(DATA_CSV),
-        "input_context": str(CONTEXT_JSON),
-        "input_model_definitions": str(MODEL_DEFS_JSON),
-        "models_dir": str(MODELS_DIR),
+        "input_data": path_for_metadata(DATA_CSV, base=EXP_DIR),
+        "input_context": path_for_metadata(CONTEXT_JSON, base=EXP_DIR),
+        "input_model_definitions": path_for_metadata(MODEL_DEFS_JSON, base=EXP_DIR),
+        "models_dir": path_for_metadata(MODELS_DIR, base=EXP_DIR),
         "auc_weights": auc_w,
         "n_cases": int(len(out_df)),
         "operators": [cfg_id for cfg_id, *_ in agreement_operator_specs()],
-        "output_csv": str(OUT_CSV),
+        "output_csv": path_for_metadata(OUT_CSV, base=EXP_DIR),
     }
     with OUT_META.open("w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2)

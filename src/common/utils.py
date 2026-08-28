@@ -78,6 +78,16 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def path_for_metadata(path: Path, *, base: Path) -> str:
+    """Return a portable relative POSIX path for JSON metadata."""
+    resolved = Path(path).resolve()
+    root = Path(base).resolve()
+    try:
+        return resolved.relative_to(root).as_posix()
+    except ValueError:
+        return Path(path).name
+
+
 def format_ci(mean: float, lo: float, hi: float, digits: int = 3) -> str:
     """Plain-text interval used in manuscript snippets."""
     return f"{mean:.{digits}f} (95% CI [{lo:.{digits}f}, {hi:.{digits}f}])"
