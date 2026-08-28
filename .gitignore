@@ -263,6 +263,14 @@ reviewers/
 # Stray LaTeX log at repo root
 texput.log
 
+# LLM / manuscript drafting artifacts (local only)
+**/case_study_figures_briefing.md
+**/results_narrative.md
+**/manuscript_snippets.md
+**/captions.md
+**/tables/
+**/figures/_debug_*
+
 # Superseded paper drafts and review artifacts (kept locally in old/)
 old/
 paper/

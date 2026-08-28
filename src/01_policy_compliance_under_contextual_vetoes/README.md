@@ -85,9 +85,6 @@ python run.py --veto-fraction 0.10   # optional extra scenario; not used in the 
 - `results/run_metadata.json` — seeds, `veto_fraction`, fingerprint
 - `figures/policy_compliance_overview.{pdf,png}` — Section 6.1 composite figure
 - `figures/policy_compliance_operator_agreement.{pdf,png}` — Kendall $\tau$ (Top-$K$ union) / Jaccard Top-$K$ heatmaps
-- `captions.md`
-- `manuscript_snippets.md`
-- `results_narrative.md`
 
 ## Main conclusions from the results
 
