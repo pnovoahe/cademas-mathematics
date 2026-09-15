@@ -1,6 +1,7 @@
 # Experiment 01 — Policy compliance under contextual vetoes
 
-Manuscript reference: companion paper, Section 5.2 (Policy Compliance under Contextual Vetoes).
+Manuscript reference: companion paper, Section 5.2
+(`\subsection{Policy Compliance under Contextual Vetoes}`).
 
 ## Scientific objective
 

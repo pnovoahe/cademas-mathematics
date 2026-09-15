@@ -19,6 +19,7 @@ from matplotlib.legend_handler import HandlerPatch
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, PathPatch, Rectangle
 from matplotlib.path import Path as MplPath
+from matplotlib.ticker import FuncFormatter
 
 from common.config import (
     AGREEMENT_LAMBDA_ALPHAS,
@@ -46,6 +47,27 @@ from common.config import (
 from common.metrics import priority_ranks, top_k_indices
 
 PANEL_LETTER_FP = FontProperties(family="Helvetica", weight="bold", size=12)
+
+# Typographic minus (U+2212) for negative numeric labels in figures.
+UNICODE_MINUS = "\u2212"
+
+
+def format_unicode_minus(value: float | int, fmt: str = ".2f") -> str:
+    """Format a number, replacing ASCII hyphen with Unicode minus (U+2212)."""
+    text = format(value, fmt)
+    if text.startswith("-"):
+        return UNICODE_MINUS + text[1:]
+    return text
+
+
+def apply_unicode_minus_formatter(axis) -> None:
+    """Force tick labels on an axis to use Unicode minus for negatives."""
+
+    def _fmt(x: float, _pos: int | None = None) -> str:
+        text = f"{x:g}"
+        return text.replace("-", UNICODE_MINUS) if text.startswith("-") else text
+
+    axis.set_major_formatter(FuncFormatter(_fmt))
 
 # Panel (a)/(b–d) $(R,Q)$ quadrant strata.
 COLOR_WEAK = "#7F7F7F"  # lower-left
@@ -171,6 +193,7 @@ def apply_paper_style(font_size: int | None = None) -> None:
             "mathtext.bf": "Helvetica Bold",
             "mathtext.sf": "Helvetica",
             "mathtext.tt": "Helvetica",
+            "axes.unicode_minus": True,
         }
     )
 
@@ -579,6 +602,8 @@ def plot_agreement_config_bars(
         ax.set_title(title, pad=4)
     if ylim is not None:
         ax.set_ylim(*ylim)
+    if ylim is not None and float(ylim[0]) < 0.0:
+        apply_unicode_minus_formatter(ax.yaxis)
     if reference_y is not None:
         ax.axhline(
             float(reference_y),
@@ -2262,7 +2287,7 @@ def _plot_triangular_agreement_heatmap(
                 ax.text(
                     j,
                     i,
-                    f"{val:.2f}",
+                    format_unicode_minus(val, ".2f"),
                     ha="center",
                     va="center",
                     color="black",
@@ -2318,6 +2343,11 @@ def _add_inpanel_agreement_colorbar(
     ticks = np.linspace(float(vmin), float(vmax), int(n_ticks))
     cb = ax.figure.colorbar(im, cax=cax, ticks=ticks)
     cb.ax.tick_params(labelsize=tick_fontsize, length=2.0, pad=1.0)
+    # Explicit Unicode minus on colorbar ticks (plain-text labels).
+    tick_fmt = ".1f" if float(vmax) - float(vmin) >= 1.0 else ".2f"
+    cb.ax.yaxis.set_major_formatter(
+        FuncFormatter(lambda x, _pos=None: format_unicode_minus(float(x), tick_fmt))
+    )
     cb.outline.set_linewidth(0.6)
     cb.outline.set_edgecolor("black")
 
@@ -3190,7 +3220,7 @@ def attrition_rank_bump(
                 ax.text(
                     float(x),
                     float(rank),
-                    f"{delta:+d}",
+                    format_unicode_minus(delta, "+d"),
                     ha="center",
                     va="center",
                     color="black",
