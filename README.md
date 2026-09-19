@@ -1,6 +1,8 @@
-# Companion Repository for “Aggregation Semantics in Cooperative Automated Decision-Making”
+# Companion Repository for “Aggregation Semantics for Prioritization in Cooperative Automated Decision-Making”
 
-This repository provides reproducible code for the simulation studies and case study reported in the paper *Aggregation Semantics for Prioritization in Cooperative Automated Decision Making*.
+This repository provides reproducible code for the simulation studies and case study reported in:
+
+Novoa-Hernández, P., Godz, M., & Pelta, D. A. (2026). Aggregation Semantics for Prioritization in Cooperative Automated Decision-Making. *Mathematics*, *14*(18), 3397. https://doi.org/10.3390/math14183397
 
 ## Contents
 
